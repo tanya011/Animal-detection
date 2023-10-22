@@ -31,9 +31,9 @@ def visualize_results(image_bytes, image_index, results, animal_type):
     write_into_jpg_file('output', result, f'output_{image_index:03d}')
 
 
-def write_into_jpg_file(dir_name, image_bytes, image_id):
+def write_into_jpg_file(dir_name, image_bytes, image_name):
     os.makedirs(dir_name, exist_ok=True)  # Make sure the directory exists
-    file_name = os.path.join(dir_name, f'{image_id}.jpg')
+    file_name = os.path.join(dir_name, f'{image_name}.jpg')
     cv2.imwrite(file_name, image_bytes)
 
 

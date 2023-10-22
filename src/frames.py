@@ -22,8 +22,6 @@ def get_frames(video_path, animal_type):
 
         # Process the frame
         counter += 1
-        # if counter % 2 == 1:
-        #     continue
         results = detect_animal(frame)
         print_results(results)
         visualize_results(frame, counter, results, animal_type)

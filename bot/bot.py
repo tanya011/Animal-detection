@@ -2,6 +2,7 @@ import os
 import config
 import telebot
 from telebot import types
+from src.frames import get_current_frame
 
 bot = telebot.TeleBot(config.BOT_TOKEN)
 
@@ -107,10 +108,14 @@ def callback_query(call):
         bot.answer_callback_query(call.id, "Теперь вы не следите за медведями!")
         animal_detection.bears = False
     elif call.data == "current_penguins":
-        with open('../img/pinguin.png', 'rb') as photo:
+        file_name = get_current_frame('bird')
+        with open(file_name, 'rb') as photo:
+            bot.send_message(call.message.chat.id, "Вот что происходит у пингвинов прямо сейчас!")
             bot.send_photo(call.message.chat.id, photo)
     elif call.data == "current_bears":
-        with open('../img/pinguin.png', 'rb') as photo:
+        file_name = get_current_frame('bear')
+        with open(file_name, 'rb') as photo:
+            bot.send_message(call.message.chat.id, "Вот что происходит у мишек прямо сейчас!")
             bot.send_photo(call.message.chat.id, photo)
 
 

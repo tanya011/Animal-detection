@@ -1,6 +1,6 @@
 import os
 import cv2
-from model import model
+from src.model import model
 from datetime import datetime
 
 
@@ -29,13 +29,17 @@ def visualize_results(image_bytes, image_index, results):
         image_bytes: The image in bytes.
         image_index: An integer, used for generating a unique name for a jpg file.
         results: A list of dictionaries, each dictionary containing the scores, labels and boxes for an image in the batch as predicted by the model.
+
+    Returns:
+        file_name: Name of the jpg file where the result is saved.
     """
     result = image_bytes
     for score, label, box in zip(results["scores"], results["labels"], results["boxes"]):
         # Highlight the detected object in the `result` image
         result = highlight_object(result, box, is_unexpected=False)
     # Write result into a file
-    write_into_jpg_file('output', result, f'output_{image_index:03d}')
+    file_name = write_into_jpg_file('../img/output', result, f'output_{image_index:03d}')
+    return file_name
 
 
 def check_something_unexpected(image_bytes, results, animal_type):
@@ -54,19 +58,25 @@ def check_something_unexpected(image_bytes, results, animal_type):
         if object_type != animal_type:
             result = highlight_object(image_bytes, box, is_unexpected=True)
             date = datetime.now().strftime('%y-%m-%d:%H:%M:%S')
-            write_into_jpg_file('unexpected', result, f'{object_type}-{date}')
+            write_into_jpg_file('../img/unexpected', result, f'{object_type}-{date}')
 
 
 def write_into_jpg_file(dir_name, image_bytes, image_name):
     """
     Creates a jpg file.
-    :param dir_name: Name of the directory where the file should be saved.
-    :param image_bytes: The image in bytes.
-    :param image_name: Name used when creating a pjg file.
+
+    Args:
+        dir_name: Name of the directory where the file should be saved.
+        image_bytes: The image in bytes.
+        image_name: Name used when creating a pjg file.
+
+    Returns:
+        file_name: Name of the jpg file where the result is saved.
     """
     os.makedirs(dir_name, exist_ok=True)  # Make sure the directory exists
     file_name = os.path.join(dir_name, f'{image_name}.jpg')
     cv2.imwrite(file_name, image_bytes)
+    return file_name
 
 
 def highlight_object(image_bytes, box, is_unexpected):
@@ -84,7 +94,7 @@ def highlight_object(image_bytes, box, is_unexpected):
     # If the detected object is an unexpected object, it is highlighted with red. Otherwise, green is used.
     color = (0, 255, 0)
     if is_unexpected:
-        color = (255, 0, 0)
+        color = (0, 0, 255)
 
     # Highlight the object
     cv2.rectangle(result, (x1, y1), (x2, y2), color=color, thickness=2)

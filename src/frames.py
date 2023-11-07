@@ -1,6 +1,14 @@
 from vidgear.gears import CamGear
 from process_image import visualize_results, print_detected_objects_info, check_something_unexpected
 from model import detect_animal
+import random
+
+# A dictionary where the key is the type of animal available in the telegram bot
+# and the value is the path to a YouTube livestream.
+video_sources = {
+    'bird': 'https://youtu.be/EBer-aLmzM8',
+    'bear': 'https://www.youtube.com/watch?v=pgFwPGZQ5b0'
+}
 
 
 def get_frames(video_path, animal_type):
@@ -31,8 +39,35 @@ def get_frames(video_path, animal_type):
         counter += 1
         results = detect_animal(frame)
         print_detected_objects_info(results)
-        # visualize_results(frame, counter, results)
         check_something_unexpected(frame, results, animal_type)
+
+    # Close the source
+    src_video.stop()
+
+
+def get_current_frame(animal_type):
+    """
+    Extracts one frame from the livestream to show what is happening now.
+    Objects detected in the frame are highlighted, and the result is saved in a `jpg` format in the `output` directory.
+
+    Args:
+        animal_type: Type of animals which are expected to be seen on the video.
+    """
+    # Check that the specified animal type is available
+    if animal_type not in video_sources.keys():
+        raise Exception(f"No source found for the animal'{animal_type}'")
+
+    # Open the source
+    video_path = video_sources[animal_type]
+    src_video = CamGear(source=video_path, stream_mode=True)
+    src_video.start()
+
+    # Get the current frame
+    frame = src_video.read()
+
+    # Process the frame
+    results = detect_animal(frame)
+    visualize_results(frame, random.randint(100000, 999999), results)
 
     # Close the source
     src_video.stop()

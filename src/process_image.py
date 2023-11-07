@@ -33,7 +33,7 @@ def visualize_results(image_bytes, image_index, results):
     result = image_bytes
     for score, label, box in zip(results["scores"], results["labels"], results["boxes"]):
         # Highlight the detected object in the `result` image
-        result = highlight_object(result, box)
+        result = highlight_object(result, box, is_unexpected=False)
     # Write result into a file
     write_into_jpg_file('output', result, f'output_{image_index:03d}')
 
@@ -52,7 +52,7 @@ def check_something_unexpected(image_bytes, results, animal_type):
         # Check if something interesting happened
         object_type = model.config.id2label[label.item()]
         if object_type != animal_type:
-            result = highlight_object(image_bytes, box)
+            result = highlight_object(image_bytes, box, is_unexpected=True)
             date = datetime.now().strftime('%y-%m-%d:%H:%M:%S')
             write_into_jpg_file('unexpected', result, f'{object_type}-{date}')
 
@@ -69,15 +69,23 @@ def write_into_jpg_file(dir_name, image_bytes, image_name):
     cv2.imwrite(file_name, image_bytes)
 
 
-def highlight_object(image_bytes, box):
+def highlight_object(image_bytes, box, is_unexpected):
     """
     Highlights the object specified by coordinates.
 
     Args:
         image_bytes: The image in bytes.
         box: A tuple of two two-dimensional coordinates in the format (top_left_x, top_left_y, bottom_right_x, bottom_right_y).
+        is_unexpected: A boolean flag showing whether the detected object is an unexpected object.
     """
     result = image_bytes
     x1, y1, x2, y2 = [int(coord) for coord in box]
-    cv2.rectangle(result, (x1, y1), (x2, y2), color=(0, 255, 0), thickness=2)
+
+    # If the detected object is an unexpected object, it is highlighted with red. Otherwise, green is used.
+    color = (0, 255, 0)
+    if is_unexpected:
+        color = (255, 0, 0)
+
+    # Highlight the object
+    cv2.rectangle(result, (x1, y1), (x2, y2), color=color, thickness=2)
     return result

@@ -8,17 +8,9 @@ animal_type = 'bird'  # type of animals on the live stream. The value is equal t
 # video_path = 'https://www.youtube.com/watch?v=pgFwPGZQ5b0'  # youtube live stream with bear
 # animal_type = 'bear'
 
-# Remove old data from `output` directory
-for file in os.listdir('output'):
-    file_name = os.path.join('output', file)
-    os.remove(file_name)
-
 # Remove old data from `unexpected` directory
 for file in os.listdir('unexpected'):
     file_name = os.path.join('unexpected', file)
     os.remove(file_name)
 
 get_frames(video_path, animal_type)
-
-files_amount = sum(1 for _ in os.listdir('output'))
-print(f'{files_amount} files were created.')

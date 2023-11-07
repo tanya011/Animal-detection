@@ -7,6 +7,16 @@ model = DetrForObjectDetection.from_pretrained("facebook/detr-resnet-50")
 
 
 def detect_animal(image_bytes):
+    """
+    Detects and identifies animals in an image.
+
+    Args:
+        image_bytes: A byte array containing the image to be processed.
+
+    Returns:
+        results: A list of dictionaries, each dictionary containing the scores, labels and boxes for an image
+        in the batch as predicted by the model.
+    """
     image = Image.fromarray(image_bytes)
     inputs = processor(images=image, return_tensors="pt")
     outputs = model(**inputs)

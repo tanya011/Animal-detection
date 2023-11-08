@@ -1,6 +1,6 @@
 from vidgear.gears import CamGear
-from src.process_image import visualize_results, print_detected_objects_info, check_something_unexpected
-from src.model import detect_animal
+from process_image import highlight_all_objects, print_detected_objects_info, check_something_unexpected
+from model import detect_animal
 import random
 
 # A dictionary where the key is the type of animal available in the telegram bot
@@ -72,7 +72,7 @@ def get_current_frame(animal_type):
     src_video.stop()
 
     # Process the frame
-    results = detect_animal(frame)
-    file_name = visualize_results(frame, random.randint(100000, 999999), results)
+    detected_objects = detect_animal(frame)
+    file_name = highlight_all_objects(frame, detected_objects)
 
     return file_name

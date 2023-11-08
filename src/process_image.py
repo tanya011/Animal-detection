@@ -1,6 +1,6 @@
 import os
 import cv2
-from src.model import model
+from model import model
 from datetime import datetime
 
 
@@ -20,26 +20,50 @@ def print_detected_objects_info(results):
     print()
 
 
-def visualize_results(image_bytes, image_index, results):
+def highlight_all_objects(image_bytes, objects):
     """
     Highlights objects detected in the image. The resulting image with highlighted objects is created
     and saved in the `output` directory.
 
     Args:
         image_bytes: The image in bytes.
-        image_index: An integer, used for generating a unique name for a jpg file.
-        results: A list of dictionaries, each dictionary containing the scores, labels and boxes for an image in the batch as predicted by the model.
+        objects: A list of dictionaries, each dictionary containing the scores, labels and boxes for an image in the batch as predicted by the model.
 
     Returns:
         file_name: Name of the jpg file where the result is saved.
     """
     result = image_bytes
-    for score, label, box in zip(results["scores"], results["labels"], results["boxes"]):
+    print_detected_objects_info(objects)
+
+    for score, label, box in zip(objects["scores"], objects["labels"], objects["boxes"]):
         # Highlight the detected object in the `result` image
         result = highlight_object(result, box, is_unexpected=False)
     # Write result into a file
-    file_name = write_into_jpg_file('../img/output', result, f'output_{image_index:03d}')
+    date = datetime.now().strftime('%y-%m-%d:%H:%M:%S')
+    file_name = write_into_jpg_file('../img/output', result, f'output_{date}')
     return file_name
+
+
+def highlight_object(image_bytes, box, is_unexpected):
+    """
+    Highlights the object specified by coordinates.
+
+    Args:
+        image_bytes: The image in bytes.
+        box: A tuple of two two-dimensional coordinates in the format (top_left_x, top_left_y, bottom_right_x, bottom_right_y).
+        is_unexpected: A boolean flag showing whether the detected object is an unexpected object.
+    """
+    result = image_bytes
+    x1, y1, x2, y2 = [int(coord) for coord in box]
+
+    # If the detected object is an unexpected object, it is highlighted with red. Otherwise, green is used.
+    color = (0, 255, 0)
+    if is_unexpected:
+        color = (0, 0, 255)
+
+    # Highlight the object
+    cv2.rectangle(result, (x1, y1), (x2, y2), color=color, thickness=2)
+    return result
 
 
 def check_something_unexpected(image_bytes, results, animal_type):
@@ -77,25 +101,3 @@ def write_into_jpg_file(dir_name, image_bytes, image_name):
     file_name = os.path.join(dir_name, f'{image_name}.jpg')
     cv2.imwrite(file_name, image_bytes)
     return file_name
-
-
-def highlight_object(image_bytes, box, is_unexpected):
-    """
-    Highlights the object specified by coordinates.
-
-    Args:
-        image_bytes: The image in bytes.
-        box: A tuple of two two-dimensional coordinates in the format (top_left_x, top_left_y, bottom_right_x, bottom_right_y).
-        is_unexpected: A boolean flag showing whether the detected object is an unexpected object.
-    """
-    result = image_bytes
-    x1, y1, x2, y2 = [int(coord) for coord in box]
-
-    # If the detected object is an unexpected object, it is highlighted with red. Otherwise, green is used.
-    color = (0, 255, 0)
-    if is_unexpected:
-        color = (0, 0, 255)
-
-    # Highlight the object
-    cv2.rectangle(result, (x1, y1), (x2, y2), color=color, thickness=2)
-    return result

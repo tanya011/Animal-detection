@@ -1,8 +1,12 @@
+# Without this, src.frames cannot be imported
+import sys
+sys.path.append('../src')
+
 import os
 import config
 import telebot
 from telebot import types
-from src.frames import get_current_frame
+from frames import get_current_frame
 
 bot = telebot.TeleBot(config.BOT_TOKEN)
 

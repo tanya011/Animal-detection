@@ -5,11 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="791521ec-fef9-4d32-97a5-feebdeb019ef" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/Animal-detection.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Animal-detection.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bot/bot.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot/bot.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/frames.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/frames.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/output/output_259760.jpg" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/process_image.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/process_image.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -66,7 +66,7 @@
     &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;deshur&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -75,7 +75,7 @@
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
-  <component name="RunManager" selected="Python.main">
+  <component name="RunManager" selected="Python.bot">
     <configuration name="bot" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Animal-detection" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -144,11 +144,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.main" />
         <item itemvalue="Python.bot" />
-        <item itemvalue="Python.frames" />
         <item itemvalue="Python.main" />
-        <item itemvalue="Python.frames" />
       </list>
     </recent_temporary>
   </component>
@@ -168,6 +165,9 @@
       <workItem from="1699383273209" duration="66000" />
       <workItem from="1699383350536" duration="2995000" />
       <workItem from="1699386362963" duration="5005000" />
+      <workItem from="1699472045201" duration="71000" />
+      <workItem from="1699474493905" duration="512000" />
+      <workItem from="1699475016155" duration="2649000" />
     </task>
     <servers />
   </component>
@@ -218,8 +218,7 @@
     </option>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/Animal_detection$frames.coverage" NAME="frames Coverage Results" MODIFIED="1699386954290" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
-    <SUITE FILE_PATH="coverage/Animal_detection$bot.coverage" NAME="bot Coverage Results" MODIFIED="1699390596312" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/bot" />
-    <SUITE FILE_PATH="coverage/Animal_detection$main.coverage" NAME="main Coverage Results" MODIFIED="1699391319064" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
+    <SUITE FILE_PATH="coverage/Animal_detection$bot.coverage" NAME="bot Coverage Results" MODIFIED="1699483077281" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/bot" />
+    <SUITE FILE_PATH="coverage/Animal_detection$main.coverage" NAME="main Coverage Results" MODIFIED="1699481930902" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
   </component>
 </project>

@@ -24,4 +24,6 @@ def detect_animal(image_bytes):
     target_sizes = torch.tensor([image.size[::-1]])
     results = processor.post_process_object_detection(outputs, target_sizes=target_sizes, threshold=0.9)[0]
 
+    results["obj_types"] = [model.config.id2label[label.item()] for label in results["labels"]]
+
     return results

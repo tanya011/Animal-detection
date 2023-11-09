@@ -27,7 +27,7 @@ def check_empty():
         return False
 
 
-@bot.message_handler(commands=['start'])
+@bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
     sticker = open('sticker.webp', 'rb')
     bot.send_sticker(message.chat.id, sticker)

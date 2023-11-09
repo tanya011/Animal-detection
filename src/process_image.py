@@ -1,6 +1,5 @@
 import os
 import cv2
-from model import model
 from datetime import datetime
 
 
@@ -9,12 +8,12 @@ def print_detected_objects_info(results):
     Prints information about objects detected in the image.
 
     Args:
-        results: A list of dictionaries, each dictionary containing the scores, labels and boxes for an image in the batch as predicted by the model.
+        results: A list of dictionaries, each dictionary containing the `scores`, `obj_types` and `boxes` keys for an image in the batch as predicted by the model.
     """
-    for score, label, box in zip(results["scores"], results["labels"], results["boxes"]):
+    for score, object_type, box in zip(results["scores"], results["obj_types"], results["boxes"]):
         box = [round(i, 2) for i in box.tolist()]
         print(
-            f"Detected {model.config.id2label[label.item()]} with confidence "
+            f"Detected {object_type} with confidence "
             f"{round(score.item(), 3)} at location {box}"
         )
     print()
@@ -27,7 +26,7 @@ def highlight_all_objects(image_bytes, objects):
 
     Args:
         image_bytes: The image in bytes.
-        objects: A list of dictionaries, each dictionary containing the scores, labels and boxes for an image in the batch as predicted by the model.
+        objects: A list of dictionaries, each dictionary containing the `scores`, `obj_types` and `boxes` keys for an image in the batch as predicted by the model.
 
     Returns:
         file_name: Name of the jpg file where the result is saved.
@@ -35,7 +34,7 @@ def highlight_all_objects(image_bytes, objects):
     result = image_bytes
     print_detected_objects_info(objects)
 
-    for score, label, box in zip(objects["scores"], objects["labels"], objects["boxes"]):
+    for score, box in zip(objects["scores"], objects["boxes"]):
         # Highlight the detected object in the `result` image
         result = highlight_object(result, box, is_unexpected=False)
     # Write result into a file
@@ -73,16 +72,22 @@ def check_something_unexpected(image_bytes, results, animal_type):
 
     Args:
         image_bytes: The image in bytes.
-        results: A list of dictionaries, each dictionary containing the scores, labels and boxes for an image in the batch as predicted by the model.
+        results: A list of dictionaries, each dictionary containing the `scores`, `obj_types` and `boxes` for an image in the batch as predicted by the model.
         animal_type: The expected type of objects.
+
+        Returns:
+            detected_objects: A list describing detected objects and their types. Each element is a tuple (`file_name`, `object_type`).
     """
-    for score, label, box in zip(results["scores"], results["labels"], results["boxes"]):
+    detected_objects = list()
+    for score, object_type, box in zip(results["scores"], results["obj_types"], results["boxes"]):
         # Check if something interesting happened
-        object_type = model.config.id2label[label.item()]
         if object_type != animal_type:
+            # Create a separate file where this object is the only one highlighted
             result = highlight_object(image_bytes, box, is_unexpected=True)
-            date = datetime.now().strftime('%y-%m-%d:%H:%M:%S')
-            write_into_jpg_file('../img/unexpected', result, f'{object_type}-{date}')
+            file_name = f"{object_type}-{datetime.now().strftime('%y-%m-%d:%H:%M:%S')}"
+            write_into_jpg_file('../img/unexpected', result, file_name)
+            detected_objects.append((file_name, object_type))
+    return detected_objects
 
 
 def write_into_jpg_file(dir_name, image_bytes, image_name):

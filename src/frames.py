@@ -59,8 +59,8 @@ def get_current_frame(video_stream):
         file_name: Name of the jpg file with the resulting image.
     """
     # Check that the specified animal type is available
-    if animal_type not in video_sources.keys():
-        raise Exception(f"No source found for the animal'{animal_type}'")
+    # if animal_type not in video_sources.keys():
+    #     raise Exception(f"No source found for the animal'{animal_type}'")
 
     # Get the current frame
     frame = video_stream.read()
@@ -68,6 +68,7 @@ def get_current_frame(video_stream):
     # Process the frame
     detected_objects = detect_animal(frame)
     file_name = highlight_all_objects(frame, detected_objects)
+    print(file_name)
 
     return file_name
 

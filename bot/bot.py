@@ -7,8 +7,8 @@ import config
 import telebot
 from telebot import types
 from frames import get_current_frame
-from frames import open_frame
-from frames import close_frame
+from frames import open_stream
+from frames import close_stream
 from sources import video_sources
 
 bot = telebot.TeleBot(config.BOT_TOKEN)
@@ -104,18 +104,18 @@ def choose_animal(message):
 def callback_query(call):
     if call.data == "add_penguins":
         bot.answer_callback_query(call.id, "Теперь вы следите за пингвинами!")
-        animal_detection.penguins = open_frame(video_sources['bird'])
+        animal_detection.penguins = open_stream(video_sources['bird'])
     elif call.data == "add_bears":
         bot.answer_callback_query(call.id, "Теперь вы следите за медведями!")
-        animal_detection.bears = open_frame(video_sources['bear'])
+        animal_detection.bears = open_stream(video_sources['bear'])
     elif call.data == "rem_penguins":
         bot.answer_callback_query(call.id, "Теперь вы не следите за пингвинами!")
         animal_detection.penguins = None
-        close_frame(video_sources['bird'])
+        close_stream(video_sources['bird'])
     elif call.data == "rem_bears":
         bot.answer_callback_query(call.id, "Теперь вы не следите за медведями!")
         animal_detection.bears = None
-        close_frame(video_sources['bear'])
+        close_stream(video_sources['bear'])
     elif call.data == "current_penguins":
         file_name = get_current_frame('bird')
         with open(file_name, 'rb') as photo:

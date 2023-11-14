@@ -72,9 +72,29 @@ def get_current_frame(video_stream):
     return file_name
 
 
-def open_frame():
-    return None
+def open_stream(source_path):
+    """
+    Opens the video source provided with the source path.
 
-def close_frame():
-    i = 0
-    # ...
+    Args:
+        source_path: A string representing the path to a YouTube live stream.
+
+    Returns:
+        An instance of `CamGear` with an opened source.
+    """
+    # Open the source
+    src_video = CamGear(source=source_path, stream_mode=True)
+    src_video.start()
+
+    return src_video
+
+
+def close_stream(src_video):
+    """
+    Closes the provided video source.
+
+    Args:
+        src_video: An instance of `CamGear`.
+    """
+    # Close the source
+    src_video.stop()

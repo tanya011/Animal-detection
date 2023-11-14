@@ -10,9 +10,15 @@ from frames import get_current_frame
 from frames import open_stream
 from frames import close_stream
 from sources import video_sources
+import multiprocessing
 
 bot = telebot.TeleBot(config.BOT_TOKEN)
 
+def penguins_processing():
+    while True:
+        print("1\n")
+
+penguin_process= None
 
 class Animals:
     def __init__(self):
@@ -102,9 +108,12 @@ def choose_animal(message):
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
+    global penguin_process
     if call.data == "add_penguins":
         bot.answer_callback_query(call.id, "Теперь вы следите за пингвинами!")
         animal_detection.penguins = open_stream(video_sources['bird'])
+        penguin_process = multiprocessing.Process(target=penguins_processing())
+        penguin_process.start()
     elif call.data == "add_bears":
         bot.answer_callback_query(call.id, "Теперь вы следите за медведями!")
         animal_detection.bears = open_stream(video_sources['bear'])
@@ -112,6 +121,7 @@ def callback_query(call):
         bot.answer_callback_query(call.id, "Теперь вы не следите за пингвинами!")
         animal_detection.penguins = None
         close_stream(video_sources['bird'])
+        penguin_process.stop()
     elif call.data == "rem_bears":
         bot.answer_callback_query(call.id, "Теперь вы не следите за медведями!")
         animal_detection.bears = None

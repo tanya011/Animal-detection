@@ -47,13 +47,13 @@ def get_frames(video_path, animal_type):
     src_video.stop()
 
 
-def get_current_frame(animal_type):
+def get_current_frame(video_stream):
     """
     Extracts one frame from the livestream to show what is happening now.
     Objects detected in the frame are highlighted, and the result is saved in a `jpg` format in the `output` directory.
 
     Args:
-        animal_type: Type of animals which are expected to be seen on the video.
+        video_stream: An opened stream source. The argument has the type `CamGear`.
 
     Returns:
         file_name: Name of the jpg file with the resulting image.
@@ -62,16 +62,8 @@ def get_current_frame(animal_type):
     if animal_type not in video_sources.keys():
         raise Exception(f"No source found for the animal'{animal_type}'")
 
-    # Open the source
-    video_path = video_sources[animal_type]
-    src_video = CamGear(source=video_path, stream_mode=True)
-    src_video.start()
-
     # Get the current frame
-    frame = src_video.read()
-
-    # Close the source
-    src_video.stop()
+    frame = video_stream.read()
 
     # Process the frame
     detected_objects = detect_animal(frame)

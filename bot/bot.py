@@ -30,14 +30,14 @@ class Animals:
 
         # Map animal types to corresponding field names
         self.field_mapping = {
-            'bird': 'penguins',
+            'bird': 'birds',
             'bear': 'bears'
         }
 
     def get_field_name(self, animal_type):
         field_name = self.field_mapping.get(animal_type, None)
         if not hasattr(self, field_name):
-            raise Exception(f"No field with name '{field_name} found. "
+            raise Exception(f"No field with name '{field_name}' found. "
                             f"Mapping for animal_type='{animal_type}' is unsuccessful.")
         return field_name
 

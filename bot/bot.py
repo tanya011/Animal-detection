@@ -74,7 +74,7 @@ animal_detection = Animals()
 
 
 def check_empty():
-    if animal_detection.bears is None and animal_detection.penguins is None:
+    if animal_detection.bears is None and animal_detection.birds is None:
         return True
     else:
         return False

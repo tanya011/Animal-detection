@@ -1,5 +1,6 @@
 # Without this, src.frames cannot be imported
 import sys
+
 sys.path.append('../src')
 
 import os
@@ -7,8 +8,7 @@ import config
 import telebot
 from telebot import types
 from frames import get_current_frame
-from frames import open_stream
-from frames import close_stream
+from frames import start_camgear_stream, stop_camgear_stream
 from sources import video_sources
 
 bot = telebot.TeleBot(config.BOT_TOKEN)
@@ -19,12 +19,53 @@ class Animals:
         self.penguins = None
         self.bears = None
 
+        # Map animal types to corresponding field names
+        self.field_mapping = {
+            'bird': 'penguins',
+            'bear': 'bears'
+        }
+
+    def get_field_name(self, animal_type):
+        field_name = self.field_mapping.get(animal_type, None)
+        if not hasattr(self, field_name):
+            raise Exception(f"No field with name '{field_name} found. "
+                            f"Mapping for animal_type='{animal_type}' is unsuccessful.")
+        return field_name
+
+    def open_stream(self, animal_type):
+        # Check that the given animal type is valid
+        if animal_type not in video_sources.keys():
+            raise Exception(f"Animal of type '{animal_type}' is not considered by our bot.")
+
+        # Based on the given animal type, get the name of the field
+        field_name = self.get_field_name(animal_type)
+
+        # Return if the stream is already opened
+        if getattr(self, field_name) is not None:
+            return
+
+        source_path = video_sources[animal_type]    # Get source path
+        stream = start_camgear_stream(source_path)  # Open stream
+        setattr(self, field_name, stream)           # Update the corresponding field
+
+    def close_stream(self, animal_type):
+        # Check that the given animal type is valid
+        if animal_type not in video_sources.keys():
+            raise Exception(f"Animal of type '{animal_type}' is not considered by our bot.")
+
+        # Based on the given animal type, get the name of the field
+        field_name = self.get_field_name(animal_type)
+
+        if getattr(self, field_name) is not None:
+            stop_camgear_stream(getattr(self, field_name))  # Close stream
+            setattr(self, field_name, None)                 # Update the corresponding field
+
 
 animal_detection = Animals()
 
 
 def check_empty():
-    if animal_detection.bears == None and animal_detection.penguins == None:
+    if animal_detection.bears is None and animal_detection.penguins is None:
         return True
     else:
         return False
@@ -104,18 +145,16 @@ def choose_animal(message):
 def callback_query(call):
     if call.data == "add_penguins":
         bot.answer_callback_query(call.id, "Теперь вы следите за пингвинами!")
-        animal_detection.penguins = open_stream(video_sources['bird'])
+        animal_detection.open_stream('bird')
     elif call.data == "add_bears":
         bot.answer_callback_query(call.id, "Теперь вы следите за медведями!")
-        animal_detection.bears = open_stream(video_sources['bear'])
+        animal_detection.open_stream('bear')
     elif call.data == "rem_penguins":
         bot.answer_callback_query(call.id, "Теперь вы не следите за пингвинами!")
-        animal_detection.penguins = None
-        close_stream(video_sources['bird'])
+        animal_detection.close_stream('bird')
     elif call.data == "rem_bears":
         bot.answer_callback_query(call.id, "Теперь вы не следите за медведями!")
-        animal_detection.bears = None
-        close_stream(video_sources['bear'])
+        animal_detection.close_stream('bear')
     elif call.data == "current_penguins":
         file_name = get_current_frame(animal_detection.penguins)
         with open(file_name, 'rb') as photo:

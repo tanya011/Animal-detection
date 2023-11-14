@@ -121,11 +121,13 @@ def callback_query(call):
         with open(file_name, 'rb') as photo:
             bot.send_message(call.message.chat.id, "Вот что происходит у пингвинов прямо сейчас!")
             bot.send_photo(call.message.chat.id, photo)
+        os.remove(file_name)
     elif call.data == "current_bears":
         file_name = get_current_frame('bear')
         with open(file_name, 'rb') as photo:
             bot.send_message(call.message.chat.id, "Вот что происходит у мишек прямо сейчас!")
             bot.send_photo(call.message.chat.id, photo)
+        os.remove(file_name)
 
 
 bot.infinity_polling()

@@ -47,8 +47,8 @@ def get_current_frame(video_stream):
         file_name: Name of the jpg file with the resulting image.
     """
     # Check that the specified animal type is available
-    if animal_type not in video_sources.keys():
-        raise Exception(f"No source found for the animal'{animal_type}'")
+    # if animal_type not in video_sources.keys():
+    #     raise Exception(f"No source found for the animal'{animal_type}'")
 
     # Get the current frame
     frame = video_stream.read()
@@ -60,7 +60,7 @@ def get_current_frame(video_stream):
     return file_name
 
 
-def open_stream(source_path):
+def start_camgear_stream(source_path):
     """
     Opens the video source provided with the source path.
 
@@ -70,19 +70,16 @@ def open_stream(source_path):
     Returns:
         An instance of `CamGear` with an opened source.
     """
-    # Open the source
     src_video = CamGear(source=source_path, stream_mode=True)
-    src_video.start()
-
+    src_video.start()  # Open the source
     return src_video
 
 
-def close_stream(src_video):
+def stop_camgear_stream(src_video):
     """
     Closes the provided video source.
 
     Args:
         src_video: An instance of `CamGear`.
     """
-    # Close the source
-    src_video.stop()
+    src_video.stop()  # Close the source

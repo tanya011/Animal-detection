@@ -2,13 +2,15 @@ from vidgear.gears import CamGear
 from process_image import highlight_all_objects, print_detected_objects_info, check_something_unexpected
 from model import detect_animal
 import random
+from sources import video_sources
+
 
 # A dictionary where the key is the type of animal available in the telegram bot
 # and the value is the path to a YouTube livestream.
-video_sources = {
-    'bird': 'https://youtu.be/EBer-aLmzM8',
-    'bear': 'https://www.youtube.com/watch?v=pgFwPGZQ5b0'
-}
+# video_sources = {
+#     'bird': 'https://youtu.be/EBer-aLmzM8',
+#     'bear': 'https://www.youtube.com/watch?v=pgFwPGZQ5b0'
+# }
 
 
 def get_frames(video_path, animal_type):
@@ -76,3 +78,11 @@ def get_current_frame(animal_type):
     file_name = highlight_all_objects(frame, detected_objects)
 
     return file_name
+
+
+def open_frame():
+    return None
+
+def close_frame():
+    i = 0
+    # ...

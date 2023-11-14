@@ -10,13 +10,22 @@ from telebot import types
 from frames import get_current_frame
 from frames import start_camgear_stream, stop_camgear_stream
 from sources import video_sources
+import multiprocessing
 
 bot = telebot.TeleBot(config.BOT_TOKEN)
 
 
+def birds_processing():
+    while True:
+        print("1\n")
+
+
+bird_process = None
+
+
 class Animals:
     def __init__(self):
-        self.penguins = None
+        self.birds = None
         self.bears = None
 
         # Map animal types to corresponding field names
@@ -88,9 +97,9 @@ def send_welcome(message):
 @bot.message_handler(commands=['add'])
 def choose_animal(message):
     markup = types.InlineKeyboardMarkup()
-    penguins_btn = types.InlineKeyboardButton("🐧 Пингвины", callback_data="add_penguins")
+    birds_btn = types.InlineKeyboardButton("🐧 Пингвины", callback_data="add_penguins")
     bears_btn = types.InlineKeyboardButton("🐻‍❄️ Медведи", callback_data="add_bears")
-    markup.add(penguins_btn, bears_btn)
+    markup.add(birds_btn, bears_btn)
     bot.send_message(message.chat.id, "Выберите за кем хотите следить:", reply_markup=markup)
 
 
@@ -100,9 +109,9 @@ def choose_animal(message):
         bot.send_message(message.chat.id, "Вы еще не выбрали животных")
         return
     markup = types.InlineKeyboardMarkup()
-    if animal_detection.penguins:
-        penguins_btn = types.InlineKeyboardButton("🐧 Пингвины", callback_data="rem_penguins")
-        markup.add(penguins_btn)
+    if animal_detection.birds:
+        birds_btn = types.InlineKeyboardButton("🐧 Пингвины", callback_data="rem_penguins")
+        markup.add(birds_btn)
     if animal_detection.bears:
         bears_btn = types.InlineKeyboardButton("🐻‍❄️ Медведи", callback_data="rem_bears")
         markup.add(bears_btn)
@@ -113,7 +122,7 @@ def choose_animal(message):
 def show_tracked_animals(message):
     tracked_animals = []
 
-    if animal_detection.penguins:
+    if animal_detection.birds:
         tracked_animals.append("🐧 пингвинами")
     if animal_detection.bears:
         tracked_animals.append("🐻‍❄️ медведями")
@@ -132,9 +141,9 @@ def choose_animal(message):
         bot.send_message(message.chat.id, "Вы еще не выбрали животных")
         return
     markup = types.InlineKeyboardMarkup()
-    if animal_detection.penguins:
-        penguins_btn = types.InlineKeyboardButton("🐧 Пингвины", callback_data="current_penguins")
-        markup.add(penguins_btn)
+    if animal_detection.birds:
+        birds_btn = types.InlineKeyboardButton("🐧 Пингвины", callback_data="current_penguins")
+        markup.add(birds_btn)
     if animal_detection.bears:
         bears_btn = types.InlineKeyboardButton("🐻‍❄️ Медведи", callback_data="current_bears")
         markup.add(bears_btn)
@@ -143,20 +152,24 @@ def choose_animal(message):
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
+    global bird_process
     if call.data == "add_penguins":
         bot.answer_callback_query(call.id, "Теперь вы следите за пингвинами!")
         animal_detection.open_stream('bird')
+        bird_process = multiprocessing.Process(target=birds_processing())
+        bird_process.start()
     elif call.data == "add_bears":
         bot.answer_callback_query(call.id, "Теперь вы следите за медведями!")
         animal_detection.open_stream('bear')
     elif call.data == "rem_penguins":
         bot.answer_callback_query(call.id, "Теперь вы не следите за пингвинами!")
         animal_detection.close_stream('bird')
+        bird_process.stop()
     elif call.data == "rem_bears":
         bot.answer_callback_query(call.id, "Теперь вы не следите за медведями!")
         animal_detection.close_stream('bear')
     elif call.data == "current_penguins":
-        file_name = get_current_frame(animal_detection.penguins)
+        file_name = get_current_frame(animal_detection.birds)
         with open(file_name, 'rb') as photo:
             bot.send_message(call.message.chat.id, "Вот что происходит у пингвинов прямо сейчас!")
             bot.send_photo(call.message.chat.id, photo)

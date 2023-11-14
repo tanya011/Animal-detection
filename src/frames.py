@@ -21,6 +21,11 @@ def get_frames(video_stream, animal_type):
         video_stream: An instance of `CamGear` -- an opened stream source.
         animal_type: Type of animals which are expected to be seen on the video.
     """
+    if video_stream is None:
+        raise Exception("No stream source provided.")
+    if animal_type is None:
+        raise Exception("Animal type should not be None.")
+
     # Get frames from the source
     counter = 0
     while True:
@@ -41,14 +46,13 @@ def get_current_frame(video_stream):
     Objects detected in the frame are highlighted, and the result is saved in a `jpg` format in the `output` directory.
 
     Args:
-        video_stream: An opened stream source. The argument has the type `CamGear`.
+        video_stream: An instance of `CamGear` -- an opened stream source.
 
     Returns:
         file_name: Name of the jpg file with the resulting image.
     """
-    # Check that the specified animal type is available
-    # if animal_type not in video_sources.keys():
-    #     raise Exception(f"No source found for the animal'{animal_type}'")
+    if video_stream is None:
+        raise Exception("No stream source provided.")
 
     # Get the current frame
     frame = video_stream.read()
@@ -70,16 +74,18 @@ def start_camgear_stream(source_path):
     Returns:
         An instance of `CamGear` with an opened source.
     """
-    src_video = CamGear(source=source_path, stream_mode=True)
-    src_video.start()  # Open the source
-    return src_video
+    video_stream = CamGear(source=source_path, stream_mode=True)
+    video_stream.start()  # Open the source
+    return video_stream
 
 
-def stop_camgear_stream(src_video):
+def stop_camgear_stream(video_stream):
     """
     Closes the provided video source.
 
     Args:
-        src_video: An instance of `CamGear`.
+        video_stream: An instance of `CamGear` -- an opened stream source.
     """
-    src_video.stop()  # Close the source
+    if video_stream is None:
+        raise Exception("No video source provided.")
+    video_stream.stop()  # Close the source

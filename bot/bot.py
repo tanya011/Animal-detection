@@ -29,10 +29,7 @@ class Animals:
     def __init__(self):
         # Maps animal type to an opened live stream. Keys are the same as in the `video_sources` dictionary.
         # If no stream is opened, value is `None`
-        self.opened_streams = {
-            'bird': None,
-            'bear': None
-        }
+        self.opened_streams = {animal_type: None for animal_type in video_sources.keys()}
 
     def open_stream(self, animal_type):
         # Check that the given animal type is valid

@@ -4,31 +4,6 @@ import random
 from sources import video_sources
 
 
-def get_frames(video_stream, animal_type):
-    """
-    Process the frames which are extracted from the video source.
-
-    Args:
-        video_stream: An instance of `CamGear` -- an opened stream source.
-        animal_type: Type of animals which are expected to be seen on the video.
-    """
-    if video_stream is None:
-        raise Exception("No stream source provided.")
-    if animal_type is None:
-        raise Exception("Animal type should not be None.")
-
-    # Get frames from the source
-    counter = 0
-    while True:
-        frame = video_stream.read()
-        if frame is None:
-            break  # End of video
-
-        # Process the frame
-        counter += 1
-        check_something_unexpected(frame, animal_type)
-
-
 def get_current_frame(video_stream):
     """
     Extracts one frame from the livestream to show what is happening now.

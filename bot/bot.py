@@ -1,30 +1,54 @@
-# Without this, src.frames cannot be imported
+# Without this, functions from `src/*` cannot be imported
 import sys
 
 sys.path.append('../src')
 
 import os
+import time
 import config
+import multiprocessing
+
 import telebot
 from telebot import types
+
 from process_stream import get_current_frame, start_camgear_stream, stop_camgear_stream
+from process_image import check_something_unexpected
 from sources import video_sources
-import multiprocessing
 
 bot = telebot.TeleBot(config.BOT_TOKEN)
 
-# Temporary solution.
-allow_daemon_processes = False
+daemon_processes = {
+    'bird': None,
+    'bear': None
+}
 
 
-def birds_processing():
-    if not allow_daemon_processes:
-        return
-    while True:
-        print("1\n")
+def find_unexpected_objects_in_daemon(video_stream, animal_type, chat_id):
+    """
+    Processes the frames, which are extracted from the video stream, and checks if there are objects unexpected for the given stream.
 
+    Args:
+        video_stream: An instance of `CamGear` -- an opened stream source.
+        animal_type: Type of animals which are expected to be seen on the video.
+        chat_id: chat ID where the resulting image should be sent to. The ID is received from the bot.
+    """
+    if animal_type is None:
+        raise Exception("Animal type should not be None.")
 
-bird_process = None
+    while video_stream is not None:
+        time.sleep(5)
+
+        # Process frame
+        frame = video_stream.read()
+        if frame is None:
+            break
+        file_name, unexpected_objects = check_something_unexpected(frame, animal_type)
+
+        # Send photo to the bot if something unexpected was found
+        if len(unexpected_objects) > 0:
+            photo = open(file_name, 'rb')
+            bot.send_photo(chat_id, photo,
+                           f"Ого, неожиданно обнаружен(ы) объект(ы) типа {', '.join(map(repr, unexpected_objects))}!")
 
 
 class Animals:
@@ -72,6 +96,34 @@ class Animals:
         if getattr(self, field_name) is not None:
             stop_camgear_stream(getattr(self, field_name))  # Close stream
             setattr(self, field_name, None)                 # Update the corresponding field
+
+    def start_daemon_process(self, animal_type, chat_id):
+        # Check that the given animal type is valid
+        if animal_type not in daemon_processes.keys():
+            raise Exception(f"Unknown animal of type '{animal_type}'. Cannot start a daemon process.")
+
+        # Check that the daemon process has not been started yet
+        if daemon_processes[animal_type] is not None:
+            return
+
+        # Based on the given animal type, get the name of the field
+        field_name = self.get_field_name(animal_type)
+
+        # Create a daemon process and start it
+        new_daemon_process = multiprocessing.Process(target=find_unexpected_objects_in_daemon(
+            getattr(self, field_name), animal_type, chat_id
+        ))
+        daemon_processes[animal_type] = new_daemon_process
+        new_daemon_process.start()
+
+    def terminate_daemon_process(self, animal_type):
+        # Check that the given animal type is valid
+        if animal_type not in daemon_processes.keys():
+            raise Exception(f"Unknown animal of type '{animal_type}'. Cannot start a daemon process.")
+
+        if daemon_processes[animal_type] is not None:
+            daemon_processes[animal_type].terminate()
+            daemon_processes[animal_type] = None
 
 
 animal_detection = Animals()
@@ -156,22 +208,23 @@ def choose_animal(message):
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
-    global bird_process
+    global daemon_processes
     if call.data == "add_penguins":
         bot.answer_callback_query(call.id, "Теперь вы следите за пингвинами!")
         animal_detection.open_stream('bird')
-        bird_process = multiprocessing.Process(target=birds_processing())
-        bird_process.start()
+        animal_detection.start_daemon_process('bird', call.message.chat.id)
     elif call.data == "add_bears":
         bot.answer_callback_query(call.id, "Теперь вы следите за медведями!")
         animal_detection.open_stream('bear')
+        animal_detection.start_daemon_process('bear', call.message.chat.id)
     elif call.data == "rem_penguins":
         bot.answer_callback_query(call.id, "Теперь вы не следите за пингвинами!")
         animal_detection.close_stream('bird')
-        bird_process.terminate()
+        animal_detection.terminate_daemon_process('bird')
     elif call.data == "rem_bears":
         bot.answer_callback_query(call.id, "Теперь вы не следите за медведями!")
         animal_detection.close_stream('bear')
+        animal_detection.terminate_daemon_process('bear')
     elif call.data == "current_penguins":
         file_name = get_current_frame(animal_detection.birds)
         with open(file_name, 'rb') as photo:

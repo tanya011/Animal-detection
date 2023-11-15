@@ -7,15 +7,19 @@ import os
 import config
 import telebot
 from telebot import types
-from frames import get_current_frame
-from frames import start_camgear_stream, stop_camgear_stream
+from process_stream import get_current_frame, start_camgear_stream, stop_camgear_stream
 from sources import video_sources
 import multiprocessing
 
 bot = telebot.TeleBot(config.BOT_TOKEN)
 
+# Temporary solution.
+allow_daemon_processes = False
+
 
 def birds_processing():
+    if not allow_daemon_processes:
+        return
     while True:
         print("1\n")
 
@@ -164,7 +168,7 @@ def callback_query(call):
     elif call.data == "rem_penguins":
         bot.answer_callback_query(call.id, "Теперь вы не следите за пингвинами!")
         animal_detection.close_stream('bird')
-        bird_process.stop()
+        bird_process.terminate()
     elif call.data == "rem_bears":
         bot.answer_callback_query(call.id, "Теперь вы не следите за медведями!")
         animal_detection.close_stream('bear')

@@ -16,12 +16,13 @@ from sources import video_sources
 from word_declensions import get_nominative, get_genitive, get_instrumental, get_emoji
 
 
-bot = telebot.TeleBot(config.BOT_TOKEN)
+# Maps animal type to a daemon process where each frame of the video stream is checked for something unexpected
+# Keys are the same as in the `video_sources` dictionary.
+# Initially, each value is equal to `None`.
+daemon_processes = {animal_type: None for animal_type in video_sources.keys()}
 
-daemon_processes = {
-    'bird': None,
-    'bear': None
-}
+
+bot = telebot.TeleBot(config.BOT_TOKEN)
 
 
 def find_unexpected_objects_in_daemon(video_stream, animal_type, chat_id):
@@ -49,17 +50,15 @@ def find_unexpected_objects_in_daemon(video_stream, animal_type, chat_id):
         if len(unexpected_objects) > 0:
             photo = open(file_name, 'rb')
             bot.send_photo(chat_id, photo,
-                           f"Ого, неожиданно обнаружен(ы) объект(ы) типа {', '.join(map(repr, unexpected_objects))}!")
+                           f"Ого, у {get_genitive(animal_type)} "
+                           f"неожиданно обнаружен(ы) объект(ы) типа {', '.join(map(repr, unexpected_objects))}!")
 
 
 class Animals:
     def __init__(self):
         # Maps animal type to an opened live stream. Keys are the same as in the `video_sources` dictionary.
-        # If no stream is opened, value is `None`
-        self.opened_streams = {
-            'bird': None,
-            'bear': None
-        }
+        # If no stream is opened, value is `None`.
+        self.opened_streams = {animal_type: None for animal_type in video_sources.keys()}
 
     def open_stream(self, animal_type):
         # Check that the given animal type is valid
@@ -87,18 +86,15 @@ class Animals:
     def start_daemon_process(self, animal_type, chat_id):
         # Check that the given animal type is valid
         if animal_type not in daemon_processes.keys():
-            raise Exception(f"Unknown animal of type '{animal_type}'. Cannot start a daemon process.")
+            raise Exception(f"Unknown animal type '{animal_type}'. Cannot start a daemon process.")
 
         # Check that the daemon process has not been started yet
         if daemon_processes[animal_type] is not None:
             return
 
-        # Based on the given animal type, get the name of the field
-        field_name = self.get_field_name(animal_type)
-
         # Create a daemon process and start it
         new_daemon_process = multiprocessing.Process(target=find_unexpected_objects_in_daemon(
-            getattr(self, field_name), animal_type, chat_id
+            self.opened_streams[animal_type], animal_type, chat_id
         ))
         daemon_processes[animal_type] = new_daemon_process
         new_daemon_process.start()
@@ -208,13 +204,10 @@ def callback_query(call):
         bot.answer_callback_query(call.id, f"Теперь вы следите за {get_instrumental(animal_type)}!")
         animal_detection.open_stream(animal_type)
         animal_detection.start_daemon_process(animal_type, call.message.chat.id)
-        # bird_process = multiprocessing.Process(target=birds_processing())
-        # bird_process.start()
     elif call.data.startswith("rem_"):
         bot.answer_callback_query(call.id, f"Теперь вы не следите за {get_instrumental(animal_type)}!")
         animal_detection.close_stream(animal_type)
         animal_detection.terminate_daemon_process(animal_type)
-        # bird_process.terminate()
     elif call.data.startswith("current_"):
         file_name = get_current_frame(animal_detection.opened_streams[animal_type])
         with open(file_name, 'rb') as photo:

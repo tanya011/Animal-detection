@@ -84,6 +84,8 @@ class Animals:
             self.opened_streams[animal_type] = None  # Update the corresponding field
 
     def start_daemon_process(self, animal_type, chat_id):
+        global daemon_processes
+
         # Check that the given animal type is valid
         if animal_type not in daemon_processes.keys():
             raise Exception(f"Unknown animal type '{animal_type}'. Cannot start a daemon process.")
@@ -100,6 +102,8 @@ class Animals:
         new_daemon_process.start()
 
     def terminate_daemon_process(self, animal_type):
+        global daemon_processes
+
         # Check that the given animal type is valid
         if animal_type not in daemon_processes.keys():
             raise Exception(f"Unknown animal of type '{animal_type}'. Cannot start a daemon process.")
@@ -195,8 +199,6 @@ def choose_animal(message):
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
-    global daemon_processes
-
     # Extract animal type from the callback data
     animal_type = call.data.split("_")[1]
 

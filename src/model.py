@@ -5,6 +5,8 @@ from PIL import Image
 processor = DetrImageProcessor.from_pretrained("facebook/detr-resnet-50")
 model = DetrForObjectDetection.from_pretrained("facebook/detr-resnet-50")
 
+confidence_threshold = 0.85
+
 
 def detect_animal(image_bytes):
     """
@@ -22,10 +24,10 @@ def detect_animal(image_bytes):
     outputs = model(**inputs)
 
     target_sizes = torch.tensor([image.size[::-1]])
-    results = processor.post_process_object_detection(outputs, target_sizes=target_sizes, threshold=0.9)[0]
+    results = processor.post_process_object_detection(outputs, target_sizes=target_sizes, threshold=confidence_threshold)[0]
 
     # Convert results["labels"] of type `tensor` into results["obj_types"] of type `str`
     results["obj_types"] = [model.config.id2label[label.item()] for label in results["labels"]]
     results.pop("labels", None)
-    
+
     return results

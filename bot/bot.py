@@ -1,20 +1,12 @@
-# Without this, functions from `src` cannot be imported
-import sys
-
-sys.path.append('../src')
-
 import os
 import config
-
 
 import telebot
 from telebot import types
 
 from animals import Animals
 from word_declensions import get_nominative, get_genitive, get_instrumental, get_emoji
-
 from process_stream import get_current_frame
-
 from daemon_processes import start_daemon_process, terminate_daemon_process
 
 
@@ -130,8 +122,6 @@ def handle_unknown_command(message):
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
-    global bird_process
-
     # Delete message with choice
     bot.delete_message(call.message.chat.id, call.message.message_id)
 

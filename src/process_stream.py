@@ -1,7 +1,5 @@
 from vidgear.gears import CamGear
 from process_image import highlight_all_objects, check_something_unexpected
-import random
-from sources import video_sources
 
 
 def get_current_frame(video_stream):

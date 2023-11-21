@@ -36,8 +36,12 @@ def start_daemon_process(animal_type, opened_stream, chat_id):
 
     # Create a daemon process and start it
     print(f"Staring daemon process for '{animal_type}'...\n")
+
     new_daemon_process = multiprocessing.Process(
-        target=find_unexpected_objects_in_daemon(opened_stream, animal_type, chat_id))
+        target=get_frames(opened_stream, animal_type))
+    # new_daemon_process = multiprocessing.Process(
+    #     target=find_unexpected_objects_in_daemon(opened_stream, animal_type, chat_id))
+
     daemon_processes[animal_type] = new_daemon_process
     new_daemon_process.start()
 
@@ -89,3 +93,39 @@ def find_unexpected_objects_in_daemon(video_stream, animal_type, chat_id):
             bot.send_photo(chat_id, photo,
                            f"Ого, у {get_genitive(animal_type)} "
                            f"неожиданно обнаружен(ы) объект(ы) типа {', '.join(map(repr, unexpected_objects))}!")
+
+
+def get_frames(video_stream, animal_type):
+    """
+    Processes the frames, which are extracted from the video stream, and checks if there are objects unexpected for the given stream.
+
+    Args:
+        video_stream: An instance of `CamGear` -- an opened stream source.
+        animal_type: Type of animals which are expected to be seen on the video.
+    """
+    if video_stream is None:
+        raise Exception("No stream source provided.")
+    if animal_type is None:
+        raise Exception("Animal type should not be None.")
+
+    # Get frames from the source
+    counter = 0
+    last_unexpected = list()
+
+    while video_stream is not None:
+        time.sleep(7)
+
+        frame = video_stream.read()
+        if frame is None:
+            break  # End of video
+
+        # Process the frame
+        counter += 1
+        file_name, unexpected_objects = check_something_unexpected(frame, animal_type)
+        if unexpected_objects != last_unexpected:
+            new_objects = [obj for obj in unexpected_objects if obj not in last_unexpected]
+            if len(new_objects) > 0:
+                print("НОВЫЕ ОБЪЕКТЫ:", new_objects)
+                print(f"Сохранено в файле {file_name}")
+                print()
+            last_unexpected = unexpected_objects

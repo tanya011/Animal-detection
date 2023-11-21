@@ -117,16 +117,16 @@ def print_detected_objects_info(objects):
     for score, object_type, box in zip(objects["scores"], objects["obj_types"], objects["boxes"]):
         box = [round(i, 2) for i in box.tolist()]
         print(
-            f"Detected {object_type} with confidence "
+            f"Detected '{object_type}' with confidence "
             f"{round(score.item(), 3)} at location {box}"
         )
     print()
 
 
 def print_unexpected_objects_info(animal_type, unexpected_objects):
+    print(f"'{animal_type}' [{datetime.now().strftime('%y-%m-%d %H:%M:%S')}]:")
     if len(unexpected_objects) > 0:
-        print(f"'{animal_type}': Detected {', '.join(map(repr, unexpected_objects))}.")
-        print()
+        print(f"Detected {', '.join(map(repr, unexpected_objects))}.")
     else:
-        print(f"{animal_type}: Nothing unexpected is detected.")
-        print()
+        print(f"Nothing unexpected is detected.")
+    print()

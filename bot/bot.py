@@ -36,13 +36,6 @@ def generate_cmds_descr():
           "📖 Чтобы увидеть список комманд, введите /help.\n")
 
 
-def birds_processing():
-    get_frames(animal_detection.opened_streams['bird'], 'bird')
-
-
-bird_process = None
-
-
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     sticker = open('sticker.webp', 'rb')
@@ -157,16 +150,11 @@ def callback_query(call):
 
         start_daemon_process(animal_type, animal_detection.opened_streams[animal_type], call.message.chat.id)
 
-        # bird_process = multiprocessing.Process(target=birds_processing())
-        # bird_process.start()
-
     elif call.data.startswith("rem_"):
         animal_detection.close_stream(animal_type)
         bot.send_message(call.message.chat.id, f"Теперь вы не следите за {get_instrumental(animal_type)}!")
 
-        terminate_daemon_process(animal_type)
-
-        # bird_process.terminate()
+        terminate_daemon_process(animal_type)\
 
     elif call.data.startswith("current_"):
         # Send a temporary message to the bot

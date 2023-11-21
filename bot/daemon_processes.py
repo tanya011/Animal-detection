@@ -4,6 +4,7 @@ import time
 from sources import video_sources
 from process_image import check_something_unexpected, print_unexpected_objects_info
 
+
 # Maps animal type to a daemon process where each frame of the video stream is checked for something unexpected
 # Keys are the same as in the `video_sources` dictionary.
 # Initially, each value is equal to `None`.
@@ -12,7 +13,7 @@ daemon_processes = {animal_type: None for animal_type in video_sources.keys()}
 
 def start_daemon_process(animal_type, opened_stream, chat_id):
     """
-    Creates and starts a daemon process where frames from a live stream are taken and processed in order to find unexpected objects.
+    Creates and starts a daemon process. Inside the process, frames from a live stream are taken and processed in order to find unexpected objects.
 
     Args:
         animal_type: Type of animal which corresponding daemon process should be started.

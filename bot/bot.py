@@ -1,6 +1,9 @@
 # Without this, src.frames cannot be imported
 import sys
 sys.path.append('../src')
+# sys.path.insert(1, '')
+
+# from src.process_stream import get_current_frame
 
 import os
 import config
@@ -9,17 +12,17 @@ import multiprocessing
 import telebot
 from telebot import types
 
-from process_stream import get_current_frame, start_camgear_stream, stop_camgear_stream
-from sources import video_sources
-from word_declensions import get_nominative, get_genitive, get_instrumental, get_emoji
+from src.process_stream import get_current_frame, start_camgear_stream, stop_camgear_stream, get_frames
+from src.sources import video_sources
+from src.word_declensions import get_nominative, get_genitive, get_instrumental, get_emoji
+
 
 
 bot = telebot.TeleBot(config.BOT_TOKEN)
 
 
 def birds_processing():
-    while True:
-        print("1\n")
+    get_frames(animal_detection.opened_streams['bird'], 'bird')
 
 
 bird_process = None
@@ -149,8 +152,9 @@ def callback_query(call):
     if call.data.startswith("add_"):
         bot.answer_callback_query(call.id, f"Теперь вы следите за {get_instrumental(animal_type)}!")
         animal_detection.open_stream(animal_type)
-        # bird_process = multiprocessing.Process(target=birds_processing())
-        # bird_process.start()
+
+        bird_process = multiprocessing.Process(target=birds_processing())
+        bird_process.start()
     elif call.data.startswith("rem_"):
         bot.answer_callback_query(call.id, f"Теперь вы не следите за {get_instrumental(animal_type)}!")
         animal_detection.close_stream(animal_type)

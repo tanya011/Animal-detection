@@ -17,7 +17,7 @@ def highlight_all_objects(image_bytes):
     """
     # Find objects on the image
     detected_objects = detect_animal(image_bytes)
-    print_detected_objects_info(detected_objects)
+    # print_detected_objects_info(detected_objects)
 
     # Process detected objects
     result = image_bytes
@@ -67,7 +67,7 @@ def check_something_unexpected(image_bytes, animal_type):
     """
     # Find objects on the image
     detected_objects = detect_animal(image_bytes)
-    print_detected_objects_info(detected_objects)
+    # print_detected_objects_info(detected_objects)
 
     # Process detected objects
     unexpected_objects = list()
@@ -77,7 +77,7 @@ def check_something_unexpected(image_bytes, animal_type):
             # Create a separate file where this object is the only one highlighted
             result = highlight_object(image_bytes, box, is_unexpected=True)
             file_name = f"{object_type}-{datetime.now().strftime('%y-%m-%d:%H:%M:%S')}"
-            write_into_jpg_file('../img/unexpected', result, file_name)
+            # write_into_jpg_file('../img/unexpected', result, file_name)
             unexpected_objects.append((file_name, object_type))
     return unexpected_objects
 

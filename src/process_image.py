@@ -68,11 +68,11 @@ def check_something_unexpected(image_bytes, animal_type):
     """
     # Find objects on the image
     detected_objects = detect_animal(image_bytes)
-    # print_detected_objects_info(detected_objects)
 
     # Process detected objects
     result = image_bytes
     unexpected_objects = list()
+
     for score, object_type, box in zip(detected_objects["scores"], detected_objects["obj_types"], detected_objects["boxes"]):
         # Check if something unexpected was found
         if object_type != animal_type:
@@ -116,15 +116,12 @@ def print_detected_objects_info(objects):
     """
     for score, object_type, box in zip(objects["scores"], objects["obj_types"], objects["boxes"]):
         box = [round(i, 2) for i in box.tolist()]
-        print(
-            f"Detected '{object_type}' with confidence "
-            f"{round(score.item(), 3)} at location {box}"
-        )
+        print(f"Detected {object_type} with confidence {round(score.item(), 3)} at location {box}")
     print()
 
 
 def print_unexpected_objects_info(animal_type, unexpected_objects):
-    print(f"'{animal_type}' [{datetime.now().strftime('%y-%m-%d %H:%M:%S')}]:")
+    print(f"'{animal_type}' [{datetime.now().strftime('%y-%m-%d:%H:%M:%S')}]:")
     if len(unexpected_objects) > 0:
         print(f"Detected {', '.join(map(repr, unexpected_objects))}.")
     else:

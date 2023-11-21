@@ -5,14 +5,32 @@ sys.path.append('../src')
 
 import os
 import config
-import telebot
-from telebot import types
-from frames import get_current_frame
-from frames import start_camgear_stream, stop_camgear_stream
-from sources import video_sources
 import multiprocessing
 
+import telebot
+from telebot import types
+
+from process_stream import get_current_frame
+from word_declensions import get_nominative, get_genitive, get_instrumental, get_emoji
+from animals import Animals
+
+import time
+
+
+animal_detection = Animals()
+
+
 bot = telebot.TeleBot(config.BOT_TOKEN)
+
+available_commands = ['/add', '/remove', '/animals', '/now', '/help']
+
+
+def generate_cmds_descr():
+    return ("🙉 Чтобы начать следить за животным введите /add и выберите животное.\n" +
+          "🙈 Чтобы перестать следить за животным - введите /remove и выберите животное.\n" +
+          "🔍 Чтобы узнать за кем вы следите - введите /animals.\n" +
+          "👀 Чтобы подсмотреть за кем-то прямо сейчас /now.\n" +
+          "📖 Чтобы увидеть список комманд, введите /help.\n")
 
 
 def birds_processing():
@@ -23,161 +41,132 @@ def birds_processing():
 bird_process = None
 
 
-class Animals:
-    def __init__(self):
-        self.birds = None
-        self.bears = None
-
-        # Map animal types to corresponding field names
-        self.field_mapping = {
-            'bird': 'birds',
-            'bear': 'bears'
-        }
-
-    def get_field_name(self, animal_type):
-        field_name = self.field_mapping.get(animal_type, None)
-        if not hasattr(self, field_name):
-            raise Exception(f"No field with name '{field_name}' found. "
-                            f"Mapping for animal_type='{animal_type}' is unsuccessful.")
-        return field_name
-
-    def open_stream(self, animal_type):
-        # Check that the given animal type is valid
-        if animal_type not in video_sources.keys():
-            raise Exception(f"Animal of type '{animal_type}' is not considered by our bot.")
-
-        # Based on the given animal type, get the name of the field
-        field_name = self.get_field_name(animal_type)
-
-        # Return if the stream is already opened
-        if getattr(self, field_name) is not None:
-            return
-
-        source_path = video_sources[animal_type]    # Get source path
-        stream = start_camgear_stream(source_path)  # Open stream
-        setattr(self, field_name, stream)           # Update the corresponding field
-
-    def close_stream(self, animal_type):
-        # Check that the given animal type is valid
-        if animal_type not in video_sources.keys():
-            raise Exception(f"Animal of type '{animal_type}' is not considered by our bot.")
-
-        # Based on the given animal type, get the name of the field
-        field_name = self.get_field_name(animal_type)
-
-        if getattr(self, field_name) is not None:
-            stop_camgear_stream(getattr(self, field_name))  # Close stream
-            setattr(self, field_name, None)                 # Update the corresponding field
-
-
-animal_detection = Animals()
-
-
-def check_empty():
-    if animal_detection.bears is None and animal_detection.penguins is None:
-        return True
-    else:
-        return False
-
-
-@bot.message_handler(commands=['start', 'help'])
+@bot.message_handler(commands=['start'])
 def send_welcome(message):
     sticker = open('sticker.webp', 'rb')
     bot.send_sticker(message.chat.id, sticker)
     bot.send_message(message.chat.id,
                      ("<b>🐾Добро пожаловать в Animal Detection Bot! 🐾</b> \n \n"
-                      "Мы сообщаем интересуню информацию о животных в зоопарке.\n \n"
-                      "🙉 Чтобы начать следить за животным введите /add и выберите животное.\n"
-                      "🙈 Чтобы перестать следить за животным - введите /remove и выберите животное.\n"
-                      "🔍 Чтобы узнать за кем вы следите - введите /animals.\n"
-                      "👀 Чтобы подсмотреть за кем-то прямо сейчас /now.\n"
+                      "Мы сообщаем интересную информацию о животных в зоопарке.\n \n"
+                      f'{generate_cmds_descr()}'
                       ), parse_mode='html')
+
+
+@bot.message_handler(commands=['help'])
+def send_welcome(message):
+    bot.send_message(message.chat.id, generate_cmds_descr())
 
 
 @bot.message_handler(commands=['add'])
 def choose_animal(message):
     markup = types.InlineKeyboardMarkup()
-    birds_btn = types.InlineKeyboardButton("🐧 Пингвины", callback_data="add_penguins")
-    bears_btn = types.InlineKeyboardButton("🐻‍❄️ Медведи", callback_data="add_bears")
-    markup.add(birds_btn, bears_btn)
+
+    # Create buttons for animal types which streams are not opened yet
+    for animal_type, opened_stream in animal_detection.opened_streams.items():
+        if opened_stream is None:
+            btn = types.InlineKeyboardButton(get_nominative(animal_type), callback_data=f"add_{animal_type}")
+            markup.add(btn)
+
+    # Send message to the bot
     bot.send_message(message.chat.id, "Выберите за кем хотите следить:", reply_markup=markup)
 
 
 @bot.message_handler(commands=['remove'])
 def choose_animal(message):
-    if check_empty():
-        bot.send_message(message.chat.id, "Вы еще не выбрали животных")
-        return
     markup = types.InlineKeyboardMarkup()
-    if animal_detection.birds:
-        birds_btn = types.InlineKeyboardButton("🐧 Пингвины", callback_data="rem_penguins")
-        markup.add(birds_btn)
-    if animal_detection.bears:
-        bears_btn = types.InlineKeyboardButton("🐻‍❄️ Медведи", callback_data="rem_bears")
-        markup.add(bears_btn)
-    bot.send_message(message.chat.id, "Выберите за кем не хотите следить:", reply_markup=markup)
+
+    # Create buttons for animal types which streams are opened
+    for animal_type, opened_stream in animal_detection.opened_streams.items():
+        if opened_stream is not None:
+            btn = types.InlineKeyboardButton(get_nominative(animal_type), callback_data=f"rem_{animal_type}")
+            markup.add(btn)
+
+    # Send message to the bot
+    if markup.keyboard:
+        bot.send_message(message.chat.id, "Выберите за кем не хотите следить:", reply_markup=markup)
+    else:
+        bot.send_message(message.chat.id, "Вы еще не выбрали животных.")
 
 
 @bot.message_handler(commands=['animals'])
 def show_tracked_animals(message):
     tracked_animals = []
 
-    if animal_detection.birds:
-        tracked_animals.append("🐧 пингвинами")
-    if animal_detection.bears:
-        tracked_animals.append("🐻‍❄️ медведями")
+    # Add names of animal types which streams are opened
+    for animal_type, opened_stream in animal_detection.opened_streams.items():
+        if opened_stream:
+            tracked_animals.append(f"{get_emoji(animal_type)} {get_instrumental(animal_type)}")
 
+    # Generate message
     if tracked_animals:
-        response = "Вы следите за: " + ", ".join(tracked_animals) + "."
+        response = "Вы следите за:\n    " + "\n    ".join(tracked_animals)
     else:
         response = "Вы пока не следите ни за одним животным."
 
+    # Send message to the bot
     bot.send_message(message.chat.id, response)
 
 
 @bot.message_handler(commands=['now'])
 def choose_animal(message):
-    if check_empty():
-        bot.send_message(message.chat.id, "Вы еще не выбрали животных")
-        return
     markup = types.InlineKeyboardMarkup()
-    if animal_detection.birds:
-        birds_btn = types.InlineKeyboardButton("🐧 Пингвины", callback_data="current_penguins")
-        markup.add(birds_btn)
-    if animal_detection.bears:
-        bears_btn = types.InlineKeyboardButton("🐻‍❄️ Медведи", callback_data="current_bears")
-        markup.add(bears_btn)
-    bot.send_message(message.chat.id, "Выберите за кем хотите подсмотреть прямо сейчас:", reply_markup=markup)
+
+    # Create buttons for animal types which streams are opened
+    for animal_type, opened_stream in animal_detection.opened_streams.items():
+        if opened_stream is not None:
+            btn = types.InlineKeyboardButton(get_nominative(animal_type), callback_data=f"current_{animal_type}")
+            markup.add(btn)
+
+    # Send message to the bot
+    if markup.keyboard:
+        bot.send_message(message.chat.id, "Выберите за кем хотите подсмотреть прямо сейчас:", reply_markup=markup)
+    else:
+        bot.send_message(message.chat.id, "Вы еще не выбрали животных.")
+
+
+@bot.message_handler(func=lambda message: True)
+def handle_unknown_command(message):
+    if message.text not in available_commands:
+        bot.send_message(message.chat.id,
+                         (
+                             f"Неизвестная комманда '{message.text}'\n\n"
+                             "Возможные комманды:\n\n"
+                             f"{generate_cmds_descr()}"
+                         ), parse_mode='html')
 
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
     global bird_process
-    if call.data == "add_penguins":
-        bot.answer_callback_query(call.id, "Теперь вы следите за пингвинами!")
-        animal_detection.open_stream('bird')
-        bird_process = multiprocessing.Process(target=birds_processing())
-        bird_process.start()
-    elif call.data == "add_bears":
-        bot.answer_callback_query(call.id, "Теперь вы следите за медведями!")
-        animal_detection.open_stream('bear')
-    elif call.data == "rem_penguins":
-        bot.answer_callback_query(call.id, "Теперь вы не следите за пингвинами!")
-        animal_detection.close_stream('bird')
-        bird_process.stop()
-    elif call.data == "rem_bears":
-        bot.answer_callback_query(call.id, "Теперь вы не следите за медведями!")
-        animal_detection.close_stream('bear')
-    elif call.data == "current_penguins":
-        file_name = get_current_frame(animal_detection.birds)
+
+    # Delete message with choice
+    bot.delete_message(call.message.chat.id, call.message.message_id)
+
+    # Extract animal type from the callback data
+    animal_type = call.data.split("_")[1]
+
+    if call.data.startswith("add_"):
+        # Send a temporary message to the bot
+        tmp_msg = bot.send_message(call.message.chat.id, "Обрабатываем запрос...")
+        animal_detection.open_stream(animal_type)
+        bot.delete_message(call.message.chat.id, tmp_msg.id)  # Delete the temporary message
+        bot.send_message(call.message.chat.id, f"Теперь вы следите за {get_instrumental(animal_type)}!")
+        # bird_process = multiprocessing.Process(target=birds_processing())
+        # bird_process.start()
+
+    elif call.data.startswith("rem_"):
+        animal_detection.close_stream(animal_type)
+        bot.send_message(call.message.chat.id, f"Теперь вы не следите за {get_instrumental(animal_type)}!")
+        # bird_process.terminate()
+
+    elif call.data.startswith("current_"):
+        # Send a temporary message to the bot
+        tmp_msg = bot.send_message(call.message.chat.id, "Обрабатываем запрос...")
+        file_name = get_current_frame(animal_detection.opened_streams[animal_type])
         with open(file_name, 'rb') as photo:
-            bot.send_message(call.message.chat.id, "Вот что происходит у пингвинов прямо сейчас!")
-            bot.send_photo(call.message.chat.id, photo)
-        os.remove(file_name)
-    elif call.data == "current_bears":
-        file_name = get_current_frame(animal_detection.bears)
-        with open(file_name, 'rb') as photo:
-            bot.send_message(call.message.chat.id, "Вот что происходит у мишек прямо сейчас!")
+            bot.delete_message(call.message.chat.id, tmp_msg.id)  # Delete the temporary message
+            bot.send_message(call.message.chat.id,
+                             f"Вот что происходит у {get_genitive(animal_type)} прямо сейчас!")
             bot.send_photo(call.message.chat.id, photo)
         os.remove(file_name)
 

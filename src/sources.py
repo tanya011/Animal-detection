@@ -2,5 +2,5 @@
 # and the value is the path to a YouTube livestream.
 video_sources = {
     'bird': 'https://youtu.be/EBer-aLmzM8',
-    'bear': 'https://www.youtube.com/watch?v=pgFwPGZQ5b0'
+    'bear': 'https://www.youtube.com/watch?v=3szkFHfr6sA'
 }

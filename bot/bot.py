@@ -1,5 +1,6 @@
 # Without this, src.frames cannot be imported
 import sys
+
 sys.path.append('../src')
 
 import os
@@ -13,6 +14,8 @@ from process_stream import get_current_frame, start_camgear_stream, stop_camgear
 from sources import video_sources
 from word_declensions import get_nominative, get_genitive, get_instrumental, get_emoji
 
+
+import time
 
 bot = telebot.TeleBot(config.BOT_TOKEN)
 
@@ -58,18 +61,31 @@ class Animals:
 animal_detection = Animals()
 
 
-@bot.message_handler(commands=['start', 'help'])
+available_commands = ['/add', '/remove', '/animals', '/now', '/help']
+
+
+def generate_cmds_descr():
+    return ("🙉 Чтобы начать следить за животным введите /add и выберите животное.\n" +
+          "🙈 Чтобы перестать следить за животным - введите /remove и выберите животное.\n" +
+          "🔍 Чтобы узнать за кем вы следите - введите /animals.\n" +
+          "👀 Чтобы подсмотреть за кем-то прямо сейчас /now.\n" +
+          "📖 Чтобы увидеть список комманд, введите /help.\n")
+
+
+@bot.message_handler(commands=['start'])
 def send_welcome(message):
     sticker = open('sticker.webp', 'rb')
     bot.send_sticker(message.chat.id, sticker)
     bot.send_message(message.chat.id,
                      ("<b>🐾Добро пожаловать в Animal Detection Bot! 🐾</b> \n \n"
-                      "Мы сообщаем интересуню информацию о животных в зоопарке.\n \n"
-                      "🙉 Чтобы начать следить за животным введите /add и выберите животное.\n"
-                      "🙈 Чтобы перестать следить за животным - введите /remove и выберите животное.\n"
-                      "🔍 Чтобы узнать за кем вы следите - введите /animals.\n"
-                      "👀 Чтобы подсмотреть за кем-то прямо сейчас /now.\n"
+                      "Мы сообщаем интересную информацию о животных в зоопарке.\n \n"
+                      f'{generate_cmds_descr()}'
                       ), parse_mode='html')
+
+
+@bot.message_handler(commands=['help'])
+def send_welcome(message):
+    bot.send_message(message.chat.id, generate_cmds_descr())
 
 
 @bot.message_handler(commands=['add'])
@@ -100,7 +116,7 @@ def choose_animal(message):
     if markup.keyboard:
         bot.send_message(message.chat.id, "Выберите за кем не хотите следить:", reply_markup=markup)
     else:
-        bot.send_message(message.chat.id, "Вы еще не выбрали животных")
+        bot.send_message(message.chat.id, "Вы еще не выбрали животных.")
 
 
 @bot.message_handler(commands=['animals'])
@@ -136,28 +152,50 @@ def choose_animal(message):
     if markup.keyboard:
         bot.send_message(message.chat.id, "Выберите за кем хотите подсмотреть прямо сейчас:", reply_markup=markup)
     else:
-        bot.send_message(message.chat.id, "Вы еще не выбрали животных")
+        bot.send_message(message.chat.id, "Вы еще не выбрали животных.")
+
+
+@bot.message_handler(func=lambda message: True)
+def handle_unknown_command(message):
+    if message.text not in available_commands:
+        bot.send_message(message.chat.id,
+                         (
+                             f"Неизвестная комманда '{message.text}'\n\n"
+                             "Возможные комманды:\n\n"
+                             f"{generate_cmds_descr()}"
+                         ), parse_mode='html')
 
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
     global bird_process
 
+    # Delete message with choice
+    bot.delete_message(call.message.chat.id, call.message.message_id)
+
     # Extract animal type from the callback data
     animal_type = call.data.split("_")[1]
 
     if call.data.startswith("add_"):
-        bot.answer_callback_query(call.id, f"Теперь вы следите за {get_instrumental(animal_type)}!")
+        # Send a temporary message to the bot
+        tmp_msg = bot.send_message(call.message.chat.id, "Обрабатываем запрос...")
         animal_detection.open_stream(animal_type)
+        bot.delete_message(call.message.chat.id, tmp_msg.id)  # Delete the temporary message
+        bot.send_message(call.message.chat.id, f"Теперь вы следите за {get_instrumental(animal_type)}!")
         # bird_process = multiprocessing.Process(target=birds_processing())
         # bird_process.start()
+
     elif call.data.startswith("rem_"):
-        bot.answer_callback_query(call.id, f"Теперь вы не следите за {get_instrumental(animal_type)}!")
         animal_detection.close_stream(animal_type)
+        bot.send_message(call.message.chat.id, f"Теперь вы не следите за {get_instrumental(animal_type)}!")
         # bird_process.terminate()
+
     elif call.data.startswith("current_"):
+        # Send a temporary message to the bot
+        tmp_msg = bot.send_message(call.message.chat.id, "Обрабатываем запрос...")
         file_name = get_current_frame(animal_detection.opened_streams[animal_type])
         with open(file_name, 'rb') as photo:
+            bot.delete_message(call.message.chat.id, tmp_msg.id)  # Delete the temporary message
             bot.send_message(call.message.chat.id,
                              f"Вот что происходит у {get_genitive(animal_type)} прямо сейчас!")
             bot.send_photo(call.message.chat.id, photo)

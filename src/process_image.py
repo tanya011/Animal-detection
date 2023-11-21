@@ -17,7 +17,7 @@ def highlight_all_objects(image_bytes):
     """
     # Find objects on the image
     detected_objects = detect_animal(image_bytes)
-    # print_detected_objects_info(detected_objects)
+    print_detected_objects_info(detected_objects)
 
     # Process detected objects
     result = image_bytes
@@ -63,23 +63,30 @@ def check_something_unexpected(image_bytes, animal_type):
         animal_type: The expected type of objects.
 
         Returns:
-            unexpected_objects: A list describing detected objects and their types. Each element is a tuple (`file_name`, `object_type`).
+            file_name: Name of the jpg file where the unexpected objects are highlighted. Its value is the date and time when the objects were detected.
+            unexpected_objects: A list describing what types the unexpected objects have.
     """
     # Find objects on the image
     detected_objects = detect_animal(image_bytes)
     # print_detected_objects_info(detected_objects)
 
     # Process detected objects
+    result = image_bytes
     unexpected_objects = list()
     for score, object_type, box in zip(detected_objects["scores"], detected_objects["obj_types"], detected_objects["boxes"]):
         # Check if something unexpected was found
         if object_type != animal_type:
-            # Create a separate file where this object is the only one highlighted
-            result = highlight_object(image_bytes, box, is_unexpected=True)
-            file_name = f"{object_type}-{datetime.now().strftime('%y-%m-%d:%H:%M:%S')}"
-            # write_into_jpg_file('../img/unexpected', result, file_name)
-            unexpected_objects.append((file_name, object_type))
-    return unexpected_objects
+            result = highlight_object(result, box, is_unexpected=True)  # Highlight the object in the resulting image
+            unexpected_objects.append(object_type)                      # Save the type of the object
+
+    print_unexpected_objects_info(animal_type, unexpected_objects)
+
+    # Save result into a jpg file. The resulting image is stored in the `img/unexpected` directory.
+    file_name = str(datetime.now().strftime('%y-%m-%d %H:%M:%S'))
+    if len(unexpected_objects) > 0:
+        file_name = write_into_jpg_file('../img/unexpected', result, file_name)
+
+    return file_name, unexpected_objects
 
 
 def write_into_jpg_file(dir_name, image_bytes, image_name):
@@ -114,3 +121,12 @@ def print_detected_objects_info(objects):
             f"{round(score.item(), 3)} at location {box}"
         )
     print()
+
+
+def print_unexpected_objects_info(animal_type, unexpected_objects):
+    if len(unexpected_objects) > 0:
+        print(f"'{animal_type}': Detected {', '.join(map(repr, unexpected_objects))}.")
+        print()
+    else:
+        print(f"{animal_type}: Nothing unexpected is detected.")
+        print()

@@ -126,3 +126,6 @@ def print_unexpected_objects_info(animal_type, unexpected_objects):
     if len(unexpected_objects) > 0:
         print(f"'{animal_type}': Detected {', '.join(map(repr, unexpected_objects))}.")
         print()
+    else:
+        print(f"{animal_type}: Nothing unexpected is detected.")
+        print()

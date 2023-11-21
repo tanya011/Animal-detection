@@ -4,26 +4,21 @@ import sys
 sys.path.append('../src')
 
 import os
-import time
 import config
-import multiprocessing
+
 
 import telebot
 from telebot import types
 
-from process_stream import get_current_frame
-from process_image import check_something_unexpected
-from word_declensions import get_nominative, get_genitive, get_instrumental, get_emoji
 from animals import Animals
+from word_declensions import get_nominative, get_genitive, get_instrumental, get_emoji
+
+from process_stream import get_current_frame
+
+from daemon_processes import start_daemon_process, terminate_daemon_process
 
 
 animal_detection = Animals()
-
-
-# Maps animal type to a daemon process where each frame of the video stream is checked for something unexpected
-# Keys are the same as in the `video_sources` dictionary.
-# Initially, each value is equal to `None`.
-daemon_processes = {animal_type: None for animal_type in video_sources.keys()}
 
 
 bot = telebot.TeleBot(config.BOT_TOKEN)
@@ -37,35 +32,6 @@ def generate_cmds_descr():
           "🔍 Чтобы узнать за кем вы следите - введите /animals.\n" +
           "👀 Чтобы подсмотреть за кем-то прямо сейчас /now.\n" +
           "📖 Чтобы увидеть список комманд, введите /help.\n")
-
-
-def find_unexpected_objects_in_daemon(video_stream, animal_type, chat_id):
-    """
-    Processes the frames, which are extracted from the video stream, and checks if there are objects unexpected for the given stream.
-
-    Args:
-        video_stream: An instance of `CamGear` -- an opened stream source.
-        animal_type: Type of animals which are expected to be seen on the video.
-        chat_id: chat ID where the resulting image should be sent to. The ID is received from the bot.
-    """
-    if animal_type is None:
-        raise Exception("Animal type should not be None.")
-
-    while video_stream is not None:
-        time.sleep(30)
-
-        # Process frame
-        frame = video_stream.read()
-        if frame is None:
-            break
-        file_name, unexpected_objects = check_something_unexpected(frame, animal_type)
-
-        # Send photo to the bot if something unexpected was found
-        if len(unexpected_objects) > 0:
-            photo = open(file_name, 'rb')
-            bot.send_photo(chat_id, photo,
-                           f"Ого, у {get_genitive(animal_type)} "
-                           f"неожиданно обнаружен(ы) объект(ы) типа {', '.join(map(repr, unexpected_objects))}!")
 
 
 @bot.message_handler(commands=['start'])
@@ -176,15 +142,17 @@ def callback_query(call):
         # Send a temporary message to the bot
         tmp_msg = bot.send_message(call.message.chat.id, "Обрабатываем запрос...")
         animal_detection.open_stream(animal_type)
-        bot.delete_message(call.message.chat.id, tmp_msg.id)  # Delete the temporary message
+        # Delete the temporary message
+        bot.delete_message(call.message.chat.id, tmp_msg.id)
         bot.send_message(call.message.chat.id, f"Теперь вы следите за {get_instrumental(animal_type)}!")
 
-        animal_detection.start_daemon_process(animal_type, call.message.chat.id)
+        start_daemon_process(animal_type, animal_detection.opened_streams[animal_type], call.message.chat.id)
 
     elif call.data.startswith("rem_"):
         animal_detection.close_stream(animal_type)
         bot.send_message(call.message.chat.id, f"Теперь вы не следите за {get_instrumental(animal_type)}!")
-        animal_detection.terminate_daemon_process(animal_type)
+
+        terminate_daemon_process(animal_type)
 
     elif call.data.startswith("current_"):
         # Send a temporary message to the bot

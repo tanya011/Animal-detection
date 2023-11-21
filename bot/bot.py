@@ -1,20 +1,21 @@
-# Without this, src.frames cannot be imported
+# Without this, functions from `src` cannot be imported
 import sys
 
 sys.path.append('../src')
 
 import os
 import config
-import multiprocessing
+
 
 import telebot
 from telebot import types
 
-from process_stream import get_current_frame
-from word_declensions import get_nominative, get_genitive, get_instrumental, get_emoji
 from animals import Animals
+from word_declensions import get_nominative, get_genitive, get_instrumental, get_emoji
 
-import time
+from process_stream import get_current_frame
+
+from daemon_processes import start_daemon_process, terminate_daemon_process
 
 
 animal_detection = Animals()
@@ -31,14 +32,6 @@ def generate_cmds_descr():
           "🔍 Чтобы узнать за кем вы следите - введите /animals.\n" +
           "👀 Чтобы подсмотреть за кем-то прямо сейчас /now.\n" +
           "📖 Чтобы увидеть список комманд, введите /help.\n")
-
-
-def birds_processing():
-    while True:
-        print("1\n")
-
-
-bird_process = None
 
 
 @bot.message_handler(commands=['start'])
@@ -149,15 +142,17 @@ def callback_query(call):
         # Send a temporary message to the bot
         tmp_msg = bot.send_message(call.message.chat.id, "Обрабатываем запрос...")
         animal_detection.open_stream(animal_type)
-        bot.delete_message(call.message.chat.id, tmp_msg.id)  # Delete the temporary message
+        # Delete the temporary message
+        bot.delete_message(call.message.chat.id, tmp_msg.id)
         bot.send_message(call.message.chat.id, f"Теперь вы следите за {get_instrumental(animal_type)}!")
-        # bird_process = multiprocessing.Process(target=birds_processing())
-        # bird_process.start()
+
+        start_daemon_process(animal_type, animal_detection.opened_streams[animal_type], call.message.chat.id)
 
     elif call.data.startswith("rem_"):
         animal_detection.close_stream(animal_type)
         bot.send_message(call.message.chat.id, f"Теперь вы не следите за {get_instrumental(animal_type)}!")
-        # bird_process.terminate()
+
+        terminate_daemon_process(animal_type)
 
     elif call.data.startswith("current_"):
         # Send a temporary message to the bot

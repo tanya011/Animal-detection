@@ -136,7 +136,7 @@ def callback_query(call):
         bot.delete_message(call.message.chat.id, tmp_msg.id)
         bot.send_message(call.message.chat.id, f"Теперь вы следите за {get_instrumental(animal_type)}!")
 
-        start_daemon_process(animal_type, animal_detection.opened_streams[animal_type], call.message.chat.id)
+        start_daemon_process(animal_type, animal_detection.opened_streams[animal_type], call.message.chat.id, bot)
 
     elif call.data.startswith("rem_"):
         animal_detection.close_stream(animal_type)

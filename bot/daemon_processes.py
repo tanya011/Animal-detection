@@ -1,8 +1,12 @@
 import multiprocessing
+import threading
+import os
+
 import time
 
 from sources import video_sources
 from process_image import check_something_unexpected, print_unexpected_objects_info
+from word_declensions import get_genitive
 
 
 # Maps animal type to a daemon process where each frame of the video stream is checked for something unexpected
@@ -10,8 +14,11 @@ from process_image import check_something_unexpected, print_unexpected_objects_i
 # Initially, each value is equal to `None`.
 daemon_processes = {animal_type: None for animal_type in video_sources.keys()}
 
+# Used for updating values of `daemon_processes`
+lock = threading.Lock()
 
-def start_daemon_process(animal_type, opened_stream, chat_id):
+
+def start_daemon_process(animal_type, opened_stream, chat_id, bot):
     """
     Creates and starts a daemon process. Inside the process, frames from a live stream are taken and processed in order to find unexpected objects.
 
@@ -21,28 +28,31 @@ def start_daemon_process(animal_type, opened_stream, chat_id):
         chat_id: ID of the Telegram chat where the resulting image should be sent to.
     """
     global daemon_processes
+    global lock
 
     # Check that the given animal type is valid
     if animal_type not in daemon_processes.keys():
         raise Exception(f"Unknown animal type '{animal_type}'. Cannot start a daemon process.")
 
-    # Check that the daemon process has not been started yet
-    if daemon_processes[animal_type] is not None:
-        return
-
     # If `opened_stream` is None, it means the user does not monitor the animal of the specified type.
     if opened_stream is None:
         return
 
-    # Create a daemon process and start it
-    print(f"Staring daemon process for '{animal_type}'...\n")
+    with lock:
+        # Check that the daemon process has not been started yet
+        if daemon_processes[animal_type] is not None:
+            return
 
-    new_daemon_process = multiprocessing.Process(
-        target=get_frames(opened_stream, animal_type))
-    # new_daemon_process = multiprocessing.Process(
-    #     target=find_unexpected_objects_in_daemon(opened_stream, animal_type, chat_id))
+        # Create a daemon process
+        print(f"Staring daemon process for '{animal_type}'...\n")
+        new_daemon_process = multiprocessing.Process(
+            target=get_frames(opened_stream, animal_type))
+        # new_daemon_process = multiprocessing.Process(
+        #     target=find_unexpected_objects_in_daemon(opened_stream, animal_type, chat_id))
 
-    daemon_processes[animal_type] = new_daemon_process
+        daemon_processes[animal_type] = new_daemon_process
+
+    # Start the process
     new_daemon_process.start()
 
 
@@ -57,14 +67,18 @@ def terminate_daemon_process(animal_type):
     if animal_type not in daemon_processes.keys():
         raise Exception(f"Unknown animal of type '{animal_type}'. Cannot start a daemon process.")
 
-    if daemon_processes[animal_type] is not None:
+    with lock:
+        # Check that the daemon process is started
+        if daemon_processes[animal_type] is None:
+            return
+
         # Terminate the process
         print(f"Terminating daemon process for '{animal_type}'...\n")
         daemon_processes[animal_type].terminate()
         daemon_processes[animal_type] = None
 
 
-def find_unexpected_objects_in_daemon(video_stream, animal_type, chat_id):
+def find_unexpected_objects_in_daemon(video_stream, animal_type, chat_id, bot):
     """
     Processes the frames, which are extracted from the video stream, and checks if there are objects unexpected for the given stream.
 
@@ -72,6 +86,7 @@ def find_unexpected_objects_in_daemon(video_stream, animal_type, chat_id):
         video_stream: An instance of `CamGear` -- an opened stream source.
         animal_type: Type of animals which are expected to be seen on the video.
         chat_id: ID of the Telegram chat where the resulting image should be sent to.
+        bot: An instance of the Telegram bot.
     """
     if animal_type is None:
         raise Exception("Animal type should not be None.")

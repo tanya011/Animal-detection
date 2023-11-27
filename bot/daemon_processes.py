@@ -103,5 +103,5 @@ def find_unexpected_objects_in_daemon(video_stream, animal_type, chat_id, bot):
         if len(unexpected_objects) > 0:
             photo = open(file_name, 'rb')
             bot.send_photo(chat_id, photo,
-                           f"Ого, у {get_genitive(animal_type)} "
-                           f"неожиданно обнаружен(ы) объект(ы) типа {', '.join(map(repr, unexpected_objects))}!")
+                           f"Ого, у {get_genitive(animal_type)} неожиданно обнаружены объекты:\n"
+                           + '\n'.join([f"  - {repr(obj_type)}" for obj_type in unexpected_objects]))

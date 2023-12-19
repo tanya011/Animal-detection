@@ -1,6 +1,6 @@
 import multiprocessing
 import threading
-import os
+from datetime import datetime
 
 import time
 
@@ -26,6 +26,7 @@ def start_daemon_process(animal_type, opened_stream, chat_id, bot):
         animal_type: Type of animal which corresponding daemon process should be started.
         opened_stream: A stream of type `CamGear` where animals of the specified type can be found.
         chat_id: ID of the Telegram chat where the resulting image should be sent to.
+        bot: An instance of the Telegram bot.
     """
     global daemon_processes
     global lock
@@ -44,9 +45,10 @@ def start_daemon_process(animal_type, opened_stream, chat_id, bot):
             return
 
         # Create a daemon process
-        print(f"Staring daemon process for '{animal_type}'...\n")
         new_daemon_process = multiprocessing.Process(
-            target=find_unexpected_objects_in_daemon(opened_stream, animal_type, chat_id, bot))
+            target=find_unexpected_objects_in_daemon,
+            args=(opened_stream, animal_type, chat_id, bot)
+        )
         daemon_processes[animal_type] = new_daemon_process
 
     # Start the process
@@ -70,9 +72,11 @@ def terminate_daemon_process(animal_type):
             return
 
         # Terminate the process
-        print(f"Terminating daemon process for '{animal_type}'...\n")
         daemon_processes[animal_type].terminate()
         daemon_processes[animal_type] = None
+
+    # Print that the daemon process is successfully terminated
+    print_log_info(animal_type, "The daemon process is terminated.")
 
 
 def find_unexpected_objects_in_daemon(video_stream, animal_type, chat_id, bot):
@@ -87,6 +91,9 @@ def find_unexpected_objects_in_daemon(video_stream, animal_type, chat_id, bot):
     """
     if animal_type is None:
         raise Exception("Animal type should not be None.")
+
+    # Print that the daemon process is successfully started
+    print_log_info(animal_type, "Daemon process is started.")
 
     while video_stream is not None:
         time.sleep(10)
@@ -105,3 +112,16 @@ def find_unexpected_objects_in_daemon(video_stream, animal_type, chat_id, bot):
             bot.send_photo(chat_id, photo,
                            f"Ого, у {get_genitive(animal_type)} "
                            f"неожиданно обнаружен(ы) объект(ы) типа {', '.join(map(repr, unexpected_objects))}!")
+
+
+def print_log_info(animal_type, message):
+    """
+    Prints information about the daemon process.
+
+    Args:
+        animal_type: Corresponding animal type of the daemon process.
+        message: A string representing the log info.
+    """
+    print(f"'{animal_type}' [{datetime.now().strftime('%y-%m-%d:%H:%M:%S')}]:")
+    print(message)
+    print()

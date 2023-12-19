@@ -53,7 +53,10 @@ def choose_animal(message):
             markup.add(btn)
 
     # Send message to the bot
-    bot.send_message(message.chat.id, "Выберите за кем хотите следить:", reply_markup=markup)
+    if markup.keyboard:
+        bot.send_message(message.chat.id, "Выберите за кем хотите следить:", reply_markup=markup)
+    else:
+        bot.send_message(message.chat.id, "Вы уже следите за всеми доступными животными.")
 
 
 @bot.message_handler(commands=['remove'])

@@ -1,7 +1,7 @@
 # Emojis of animals available in the bot. Used in messages from the bot.
 emojis = {
     'bird': '🐧',
-    'bear': '🐻‍❄️'
+    'bear': '️🐼'
 }
 
 # Declensions of russian words of corresponding animals available in the bot.

@@ -9,10 +9,7 @@
   - `os` - for manipulating with images
   - `cv2` - highlighting an object on the image
   - `vidgear` - interaction with YouTube live streams
-
-- Multiprocessing:
-  - multiprocessing - for creating daemon processes
-  - threading - simple thread safety 
+  - `threading` - for creating daemon processes
 
 ### Functionality
 
@@ -28,17 +25,18 @@ Moreover, the user may get a notification if something unexpected is detected. F
 
 ### Project structure
 ```
-src
-├── bot
-│   ├── animals.py           # Responsible for storing YouTube streams as `CamGear` instances
-│   ├── bot.py               # Stores logic and functionality for a Telegram bot           
-│   ├── daemon_processes.py  # Manages processes which are executed in the background
-│   └── sticker.webp
-├── img                # Temprarily created images are stored here
-├── model.py           # Responsible for detecting objects on an image
-├── process_image.py   # Responsible for manipulating with stream frames
-├── process_stream.py  # Responsible for manipulating with streams
-└── static
-    ├── sources.py           # Stores links to YouTube streams
-    └── word_declensions.py  # Declensions of russian words
+├── README.md
+└── src
+    ├── bot
+    │   ├── animals.py           # Responsible for storing YouTube streams as `CamGear` instances
+    │   ├── bot.py               # Stores logic and functionality for a Telegram bot           
+    │   ├── daemon_processes.py  # Manages processes which are executed in the background
+    │   └── sticker.webp
+    ├── img                # Temprarily created images are stored here
+    ├── model.py           # Responsible for detecting objects on an image
+    ├── process_image.py   # Responsible for manipulating with stream frames
+    ├── process_stream.py  # Responsible for manipulating with streams
+    └── static
+        ├── sources.py           # Stores links to YouTube streams
+        └── word_declensions.py  # Declensions of russian words
 ```

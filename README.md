@@ -26,8 +26,7 @@ Commands supported by the bot:
 Moreover, the user may get a notification if something unexpected is detected. For example, a message is sent when a person enters the pengiuns' environment. This part of functionality is implemented by executing some background processes. 
 
 
-### Structure 
-
+### Project structure
 ```
 src
 ├── bot
@@ -35,10 +34,11 @@ src
 │   ├── bot.py               # Stores logic and functionality for a Telegram bot           
 │   ├── daemon_processes.py  # Manages processes which are executed in the background
 │   └── sticker.webp
-├── img                  # Temprarily created images are stored here
-├── model.py             # Responsible for detecting objects on an image
-├── process_image.py     # Responsible for manipulating with stream frames
-├── process_stream.py    # Responsible for manipulating with streams
-├── sources.py           # Stores links to YouTube streams
-└── word_declensions.py  # Declensions of russian words
+├── img                # Temprarily created images are stored here
+├── model.py           # Responsible for detecting objects on an image
+├── process_image.py   # Responsible for manipulating with stream frames
+├── process_stream.py  # Responsible for manipulating with streams
+└── static
+    ├── sources.py           # Stores links to YouTube streams
+    └── word_declensions.py  # Declensions of russian words
 ```

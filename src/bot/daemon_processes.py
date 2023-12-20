@@ -1,4 +1,3 @@
-import multiprocessing
 import os
 import threading
 from datetime import datetime
@@ -46,7 +45,7 @@ def start_daemon_process(animal_type, opened_stream, chat_id, bot):
             return
 
         # Create a daemon process
-        new_daemon_process = multiprocessing.Process(
+        new_daemon_process = threading.Thread(
             target=find_unexpected_objects_in_daemon,
             args=(opened_stream, animal_type, chat_id, bot)
         )
@@ -114,7 +113,6 @@ def find_unexpected_objects_in_daemon(video_stream, animal_type, chat_id, bot):
                            f"Ого, у {get_genitive(animal_type)} "
                            f"неожиданно обнаружен(ы) объект(ы) типа {', '.join(map(repr, unexpected_objects))}!")
 
-        if os.path.exists(file_name):
             os.remove(file_name)  # Remove temporarily created jpg file
 
 

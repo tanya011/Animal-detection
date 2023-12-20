@@ -1,5 +1,5 @@
 from process_stream import start_camgear_stream, stop_camgear_stream
-from sources import video_sources
+from static.sources import video_sources
 
 
 class Animals:

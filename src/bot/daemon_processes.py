@@ -4,9 +4,9 @@ from datetime import datetime
 
 import time
 
-from sources import video_sources
+from static.sources import video_sources
 from process_image import check_something_unexpected, print_unexpected_objects_info
-from word_declensions import get_genitive
+from static.word_declensions import get_genitive
 
 
 # Maps animal type to a daemon process where each frame of the video stream is checked for something unexpected

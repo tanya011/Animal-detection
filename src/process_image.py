@@ -24,9 +24,10 @@ def highlight_all_objects(image_bytes):
     for score, box in zip(detected_objects["scores"], detected_objects["boxes"]):
         # Highlight the detected object in the `result` image
         result = highlight_object(result, box, is_unexpected=False)
-    # Write result into a file
+
+    # Write result into a jpg file
     date = datetime.now().strftime('%y-%m-%d:%H:%M:%S')
-    file_name = write_into_jpg_file('../img/output', result, f'output_{date}')
+    file_name = write_into_jpg_file('../img', result, f'output_{date}')
 
     return file_name
 
@@ -81,10 +82,11 @@ def check_something_unexpected(image_bytes, animal_type):
 
     print_unexpected_objects_info(animal_type, unexpected_objects)
 
-    # Save result into a jpg file. The resulting image is stored in the `img/unexpected` directory.
-    file_name = str(datetime.now().strftime('%y-%m-%d %H:%M:%S'))
+    # Save result into a jpg file if any unexpected objects were detected
+    file_name = None
     if len(unexpected_objects) > 0:
-        file_name = write_into_jpg_file('../img/unexpected', result, file_name)
+        date = datetime.now().strftime('%y-%m-%d:%H:%M:%S')
+        file_name = write_into_jpg_file('../img', result, f'unexpected_{date}')
 
     return file_name, unexpected_objects
 

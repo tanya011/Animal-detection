@@ -1,4 +1,5 @@
 import multiprocessing
+import os
 import threading
 from datetime import datetime
 
@@ -112,6 +113,9 @@ def find_unexpected_objects_in_daemon(video_stream, animal_type, chat_id, bot):
             bot.send_photo(chat_id, photo,
                            f"Ого, у {get_genitive(animal_type)} "
                            f"неожиданно обнаружен(ы) объект(ы) типа {', '.join(map(repr, unexpected_objects))}!")
+
+        if os.path.exists(file_name):
+            os.remove(file_name)  # Remove temporarily created jpg file
 
 
 def print_log_info(animal_type, message):

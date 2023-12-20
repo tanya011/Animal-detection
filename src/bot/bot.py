@@ -156,7 +156,9 @@ def callback_query(call):
             bot.send_message(call.message.chat.id,
                              f"Вот что происходит у {get_genitive(animal_type)} прямо сейчас!")
             bot.send_photo(call.message.chat.id, photo)
-        os.remove(file_name)
+
+        if os.path.exists(file_name):
+            os.remove(file_name)  # Remove temporarily created jpg file
 
 
 bot.infinity_polling()

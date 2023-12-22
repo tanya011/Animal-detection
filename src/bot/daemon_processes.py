@@ -5,7 +5,7 @@ from datetime import datetime
 import time
 
 from static.sources import video_sources
-from process_image import check_something_unexpected, print_unexpected_objects_info
+from img_processing.process_image import check_something_unexpected, print_unexpected_objects_info
 from static.word_declensions import get_genitive
 
 

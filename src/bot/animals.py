@@ -1,4 +1,4 @@
-from process_stream import start_camgear_stream, stop_camgear_stream
+from img_processing.process_stream import start_camgear_stream, stop_camgear_stream
 from static.sources import video_sources
 
 

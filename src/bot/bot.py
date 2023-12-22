@@ -6,15 +6,13 @@ from telebot import types
 
 from animals import Animals
 from static.word_declensions import get_nominative, get_genitive, get_instrumental, get_emoji
-from process_stream import get_current_frame
+from img_processing.process_stream import get_current_frame
 from daemon_processes import start_daemon_process, terminate_daemon_process
 
 
 animal_detection = Animals()
 
-
 bot = telebot.TeleBot(config.BOT_TOKEN)
-
 available_commands = ['/add', '/remove', '/animals', '/now', '/help']
 
 

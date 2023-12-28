@@ -1,5 +1,10 @@
 # Animal-detection
 
+### Team members
+- Tatiana Elfimova
+- Yuliya Kudinova
+- Daria Shutina
+
 ### Libraries / Technologies
 
 - ML:
